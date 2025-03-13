@@ -28,12 +28,12 @@ const Sidebar = ({ activeItem, onMenuItemClick }: SidebarProps) => {
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'event-request', label: 'Request for Event', icon: <Calendar className="h-5 w-5" /> },
     { id: 'resource-request', label: 'Request for Resource', icon: <Package className="h-5 w-5" /> },
+    { id: 'resource-availability', label: 'Resource Availability', icon: <Building className="h-5 w-5" /> },
     { id: 'fund-analysis', label: 'Fund Analysis', icon: <BarChart className="h-5 w-5" /> },
     { id: 'request-status', label: 'Status of Request', icon: <ClipboardList className="h-5 w-5" /> },
     { id: 'report', label: 'Report', icon: <FileText className="h-5 w-5" /> },
     { id: 'collaboration', label: 'Collaboration', icon: <Users className="h-5 w-5" /> },
-    { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> },
-    { id: 'resource-availability', label: 'Resource Availability', icon: <Building className="h-5 w-5" /> }
+    { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> }
   ];
 
   const toggleSidebar = () => {

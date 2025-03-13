@@ -1,10 +1,13 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83% 53.3%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -30,72 +33,155 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 221.2 83% 53.3%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 221.2 83% 53.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
+    font-family: 'Inter', sans-serif;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
+  }
+}
+
+@layer components {
+  /* General dashboard components */
+  .dashboard-container {
+    @apply grid h-screen w-full overflow-hidden;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .dashboard-sidebar {
+    @apply bg-sidebar flex flex-col h-screen border-r border-sidebar-border shadow-lg transition-all duration-300 ease-in-out z-30;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .dashboard-sidebar-collapsed {
+    @apply w-[72px];
+  }
+
+  .dashboard-sidebar-expanded {
+    @apply w-[240px];
+  }
+
+  .dashboard-content {
+    @apply p-6 overflow-auto bg-background;
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .dashboard-header {
+    @apply flex items-center justify-between px-6 py-3 bg-background border-b;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* Sidebar menu items */
+  .sidebar-menu-item {
+    @apply flex items-center px-3 py-2 my-1 rounded-md text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 ease-in-out cursor-pointer;
+  }
+
+  .sidebar-menu-item.active {
+    @apply bg-sidebar-primary text-sidebar-primary-foreground;
+  }
+
+  .sidebar-menu-icon {
+    @apply mr-3 h-5 w-5;
+  }
+
+  /* Card and content components */
+  .dashboard-card {
+    @apply bg-card rounded-lg border border-border shadow-sm p-6 mb-6 transition-all duration-300 hover:shadow-md;
+  }
+
+  .section-title {
+    @apply text-sm font-medium text-muted-foreground mb-1;
+  }
+
+  .content-title {
+    @apply text-2xl font-semibold mb-4 text-foreground;
+  }
+
+  /* Form elements */
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-foreground mb-1;
+  }
+
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background
+    file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .form-textarea {
+    @apply flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background
+    placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .form-select {
+    @apply flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm
+    ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring
+    focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .form-checkbox {
+    @apply h-4 w-4 rounded border border-primary text-primary focus:ring-primary;
+  }
+
+  /* Animations */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .scale-in {
+    @apply animate-scale-in;
+  }
+
+  .slide-in {
+    @apply animate-slide-in;
+  }
+
+  .blur-in {
+    @apply animate-blur-in;
   }
 }

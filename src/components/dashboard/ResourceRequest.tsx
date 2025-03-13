@@ -1,0 +1,110 @@
+
+import { useState } from 'react';
+import { RESOURCE_LABELS } from '@/utils/mock-data';
+import { ResourceType } from '@/types/dashboard';
+import CustomButton from '../ui/custom-button';
+
+const ResourceRequest = () => {
+  const [formData, setFormData] = useState({
+    eventName: '',
+    date: '',
+    resources: [] as ResourceType[]
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleResourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    const resourceValue = value as ResourceType;
+    
+    setFormData(prev => {
+      if (checked) {
+        return { ...prev, resources: [...prev.resources, resourceValue] };
+      } else {
+        return { ...prev, resources: prev.resources.filter(r => r !== resourceValue) };
+      }
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Resource request submitted:', formData);
+    // Here you would normally send the data to a server
+    alert('Resource request submitted successfully!');
+    setFormData({
+      eventName: '',
+      date: '',
+      resources: []
+    });
+  };
+
+  return (
+    <div className="animate-scale-in">
+      <h1 className="content-title">Request for Resource</h1>
+      
+      <div className="dashboard-card max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="eventName" className="form-label">Event Name</label>
+            <input
+              type="text"
+              id="eventName"
+              name="eventName"
+              value={formData.eventName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Enter event name"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="date" className="form-label">Event Date</label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Resources Required</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+              {(Object.entries(RESOURCE_LABELS) as [ResourceType, string][]).map(([value, label]) => (
+                <div key={value} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`resource-${value}`}
+                    name="resources"
+                    value={value}
+                    checked={formData.resources.includes(value)}
+                    onChange={handleResourceChange}
+                    className="form-checkbox mr-2"
+                  />
+                  <label htmlFor={`resource-${value}`} className="text-sm">
+                    {label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <CustomButton type="submit">
+              Submit Request
+            </CustomButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ResourceRequest;

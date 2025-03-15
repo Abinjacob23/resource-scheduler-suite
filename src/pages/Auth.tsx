@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,11 @@ const Auth = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const checkIsAdmin = (email: string) => {
-    // Replace this with your actual admin emails
+    // Admin credentials check
     const adminEmails = ['admin@example.com', 'test@example.com'];
     return adminEmails.includes(email);
   };
@@ -29,37 +28,34 @@ const Auth = () => {
     setError(null);
 
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-        
+      // Special admin bypass - direct login without Supabase auth
+      if (email === 'admin@example.com' && password === 'admin123') {
         toast({
-          title: "Account created",
-          description: "Please check your email for verification instructions.",
+          title: "Admin Access Granted",
+          description: "Welcome to the admin dashboard.",
         });
+        navigate('/admin');
+        return;
+      }
+
+      // Regular Supabase auth for non-admin users
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
+      // Check if the user is an admin and redirect accordingly
+      if (checkIsAdmin(email)) {
+        navigate('/admin');
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-        
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
-        });
-        
-        // Check if the user is an admin and redirect accordingly
-        if (checkIsAdmin(email)) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+        navigate('/');
       }
     } catch (error: any) {
       setError(error.message);
@@ -73,12 +69,10 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            {isSignUp ? 'Create an account' : 'Welcome back'}
+            Welcome back
           </CardTitle>
           <CardDescription className="text-center">
-            {isSignUp 
-              ? 'Enter your details to create your account' 
-              : 'Enter your credentials to sign in to your account'}
+            Enter your credentials to sign in to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,22 +105,18 @@ const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Loading...' : isSignUp ? 'Create account' : 'Sign in'}
+              {isLoading ? 'Loading...' : 'Sign in'}
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <div className="text-center text-sm mt-2">
-            {isSignUp ? 'Already have an account? ' : 'Don\'t have an account? '}
-            <Button 
-              variant="link" 
-              className="p-0 h-auto font-semibold" 
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? 'Sign in' : 'Create an account'}
-            </Button>
+          
+          <div className="mt-4 p-3 bg-muted rounded-md">
+            <p className="text-sm font-medium">Admin Access:</p>
+            <p className="text-xs text-muted-foreground">
+              Email: admin@example.com<br/>
+              Password: admin123
+            </p>
           </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   );

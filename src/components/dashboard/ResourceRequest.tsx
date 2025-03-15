@@ -1,10 +1,16 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { RESOURCE_LABELS } from '@/utils/mock-data';
 import { ResourceType } from '@/types/dashboard';
 import CustomButton from '../ui/custom-button';
+import { useToast } from '@/hooks/use-toast';
 
 const ResourceRequest = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     eventName: '',
     date: '',
@@ -29,16 +35,61 @@ const ResourceRequest = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Resource request submitted:', formData);
-    // Here you would normally send the data to a server
-    alert('Resource request submitted successfully!');
-    setFormData({
-      eventName: '',
-      date: '',
-      resources: []
-    });
+    
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit a resource request.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (formData.resources.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one resource.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase.from('resource_requests').insert({
+        user_id: user.id,
+        event_name: formData.eventName,
+        date: formData.date,
+        resources: formData.resources,
+        status: 'pending'
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success!",
+        description: "Resource request submitted successfully.",
+      });
+      
+      // Reset form
+      setFormData({
+        eventName: '',
+        date: '',
+        resources: []
+      });
+    } catch (error) {
+      console.error('Error submitting resource request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit resource request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,8 +148,8 @@ const ResourceRequest = () => {
           </div>
           
           <div className="mt-6">
-            <CustomButton type="submit">
-              Submit Request
+            <CustomButton type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </CustomButton>
           </div>
         </form>

@@ -1,8 +1,14 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import CustomButton from '../ui/custom-button';
+import { useToast } from '@/hooks/use-toast';
 
 const EventRequest = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     association: '',
     eventName: '',
@@ -15,17 +21,54 @@ const EventRequest = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Event request submitted:', formData);
-    // Here you would normally send the data to a server
-    alert('Event request submitted successfully!');
-    setFormData({
-      association: '',
-      eventName: '',
-      date: '',
-      description: ''
-    });
+    
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit an event request.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase.from('events').insert({
+        user_id: user.id,
+        association: formData.association,
+        event_name: formData.eventName,
+        date: formData.date,
+        description: formData.description,
+        status: 'pending'
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success!",
+        description: "Event request submitted successfully.",
+      });
+      
+      // Reset form
+      setFormData({
+        association: '',
+        eventName: '',
+        date: '',
+        description: ''
+      });
+    } catch (error) {
+      console.error('Error submitting event request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit event request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,8 +133,8 @@ const EventRequest = () => {
           </div>
           
           <div className="mt-6">
-            <CustomButton type="submit">
-              Submit Request
+            <CustomButton type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </CustomButton>
           </div>
         </form>

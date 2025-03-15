@@ -9,6 +9,102 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      calendar_bookings: {
+        Row: {
+          created_at: string | null
+          end1: string
+          id: string
+          resource_id: string
+          start: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          end1: string
+          id?: string
+          resource_id: string
+          start: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          end1?: string
+          id?: string
+          resource_id?: string
+          start?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      collaborations: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          event_name: string
+          id: string
+          message: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          event_name: string
+          id?: string
+          message?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          event_name?: string
+          id?: string
+          message?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          association: string
+          created_at: string | null
+          date: string
+          description: string | null
+          event_name: string
+          id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          association: string
+          created_at?: string | null
+          date: string
+          description?: string | null
+          event_name: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          association?: string
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          event_name?: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -27,6 +123,66 @@ export type Database = {
           id?: string
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      resource_requests: {
+        Row: {
+          created_at: string | null
+          date: string
+          event_name: string
+          id: string
+          resources: string[]
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          event_name: string
+          id?: string
+          resources: string[]
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          event_name?: string
+          id?: string
+          resources?: string[]
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

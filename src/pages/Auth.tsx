@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,12 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const checkIsAdmin = (email: string) => {
+    // Replace this with your actual admin emails
+    const adminEmails = ['admin@example.com', 'test@example.com'];
+    return adminEmails.includes(email);
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +54,12 @@ const Auth = () => {
           description: "You have successfully logged in.",
         });
         
-        navigate('/');
+        // Check if the user is an admin and redirect accordingly
+        if (checkIsAdmin(email)) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       setError(error.message);

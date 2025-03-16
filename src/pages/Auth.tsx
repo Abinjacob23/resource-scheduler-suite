@@ -18,7 +18,7 @@ const Auth = () => {
 
   const checkIsAdmin = (email: string) => {
     // Admin credentials check
-    const adminEmails = ['admin@example.com', 'test@example.com'];
+    const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
     return adminEmails.includes(email);
   };
 
@@ -29,11 +29,14 @@ const Auth = () => {
 
     try {
       // Special admin bypass - direct login without Supabase auth
-      if (email === 'admin@example.com' && password === 'admin123') {
+      if ((email === 'admin@example.com' && password === 'admin123') || 
+          (email === 'admin@gmail.com' && password === 'admin123')) {
         toast({
           title: "Admin Access Granted",
           description: "Welcome to the admin dashboard.",
         });
+        // Store admin session in localStorage
+        localStorage.setItem('adminSession', email);
         navigate('/admin');
         return;
       }

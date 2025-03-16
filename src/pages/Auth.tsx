@@ -108,14 +108,6 @@ const Auth = () => {
               {isLoading ? 'Loading...' : 'Sign in'}
             </Button>
           </form>
-          
-          <div className="mt-4 p-3 bg-muted rounded-md">
-            <p className="text-sm font-medium">Admin Access:</p>
-            <p className="text-xs text-muted-foreground">
-              Email: admin@example.com<br/>
-              Password: admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,8 +1,8 @@
 
-import AdminDashboard from "@/components/admin/AdminDashboard";
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 
 const Admin = () => {
   const { user } = useAuth();
@@ -40,7 +40,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminDashboard />
+      <DashboardLayout isAdmin={true} />
     </div>
   );
 };

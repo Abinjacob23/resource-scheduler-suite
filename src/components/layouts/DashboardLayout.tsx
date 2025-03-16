@@ -11,6 +11,7 @@ import Report from '../dashboard/Report';
 import Collaboration from '../dashboard/Collaboration';
 import ChangePassword from '../dashboard/ChangePassword';
 import ResourceAvailability from '../dashboard/ResourceAvailability';
+import CancelEvent from '../dashboard/CancelEvent';
 
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -39,6 +40,8 @@ const DashboardLayout = () => {
         return <ChangePassword />;
       case 'resource-availability':
         return <ResourceAvailability />;
+      case 'cancel-event':
+        return <CancelEvent />;
       default:
         return <Dashboard />;
     }

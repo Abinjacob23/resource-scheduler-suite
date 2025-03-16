@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building,
-  Menu
+  CalendarX
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +31,7 @@ const Sidebar = ({ activeItem, onMenuItemClick }: SidebarProps) => {
     { id: 'resource-availability', label: 'Resource Availability', icon: <Building className="h-5 w-5" /> },
     { id: 'fund-analysis', label: 'Fund Analysis', icon: <BarChart className="h-5 w-5" /> },
     { id: 'request-status', label: 'Status of Request', icon: <ClipboardList className="h-5 w-5" /> },
+    { id: 'cancel-event', label: 'Cancel Event', icon: <CalendarX className="h-5 w-5" /> },
     { id: 'report', label: 'Report', icon: <FileText className="h-5 w-5" /> },
     { id: 'collaboration', label: 'Collaboration', icon: <Users className="h-5 w-5" /> },
     { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> }

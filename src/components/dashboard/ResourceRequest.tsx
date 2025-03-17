@@ -5,11 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { RESOURCE_LABELS } from '@/utils/mock-data';
 import { ResourceType } from '@/types/dashboard';
 import CustomButton from '../ui/custom-button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const ResourceRequest = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     eventName: '',
@@ -39,20 +38,12 @@ const ResourceRequest = () => {
     e.preventDefault();
     
     if (!user) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to submit a resource request.",
-        variant: "destructive"
-      });
+      toast.error("You must be logged in to submit a resource request.");
       return;
     }
     
     if (formData.resources.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one resource.",
-        variant: "destructive"
-      });
+      toast.error("Please select at least one resource.");
       return;
     }
     
@@ -69,10 +60,7 @@ const ResourceRequest = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Success!",
-        description: "Resource request submitted successfully.",
-      });
+      toast.success("Resource request submitted successfully.");
       
       // Reset form
       setFormData({
@@ -82,11 +70,7 @@ const ResourceRequest = () => {
       });
     } catch (error) {
       console.error('Error submitting resource request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit resource request. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to submit resource request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,40 +78,46 @@ const ResourceRequest = () => {
 
   return (
     <div className="animate-scale-in">
-      <h1 className="content-title">Request for Resource</h1>
+      <h1 className="text-2xl font-bold mb-6">Request for Resource</h1>
       
-      <div className="dashboard-card max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="eventName" className="form-label">Event Name</label>
+      <div className="bg-card border border-border rounded-lg shadow-sm p-6 max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="eventName" className="block text-sm font-medium">
+              Event Name
+            </label>
             <input
               type="text"
               id="eventName"
               name="eventName"
               value={formData.eventName}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter event name"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="date" className="form-label">Event Date</label>
+          <div className="space-y-2">
+            <label htmlFor="date" className="block text-sm font-medium">
+              Event Date
+            </label>
             <input
               type="date"
               id="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label className="form-label">Resources Required</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">
+              Resources Required
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 p-3 border border-input rounded-md bg-background/50">
               {(Object.entries(RESOURCE_LABELS) as [ResourceType, string][]).map(([value, label]) => (
                 <div key={value} className="flex items-center">
                   <input
@@ -137,7 +127,7 @@ const ResourceRequest = () => {
                     value={value}
                     checked={formData.resources.includes(value)}
                     onChange={handleResourceChange}
-                    className="form-checkbox mr-2"
+                    className="h-4 w-4 rounded border-input text-primary focus:ring-primary mr-2"
                   />
                   <label htmlFor={`resource-${value}`} className="text-sm">
                     {label}
@@ -147,8 +137,8 @@ const ResourceRequest = () => {
             </div>
           </div>
           
-          <div className="mt-6">
-            <CustomButton type="submit" disabled={isSubmitting}>
+          <div className="pt-2">
+            <CustomButton type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </CustomButton>
           </div>

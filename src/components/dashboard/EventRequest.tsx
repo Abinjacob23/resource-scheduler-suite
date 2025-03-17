@@ -4,10 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import CustomButton from '../ui/custom-button';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const EventRequest = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     association: '',
@@ -25,11 +25,7 @@ const EventRequest = () => {
     e.preventDefault();
     
     if (!user) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to submit an event request.",
-        variant: "destructive"
-      });
+      toast.error("You must be logged in to submit an event request.");
       return;
     }
     
@@ -47,10 +43,7 @@ const EventRequest = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Success!",
-        description: "Event request submitted successfully.",
-      });
+      toast.success("Event request submitted successfully.");
       
       // Reset form
       setFormData({
@@ -61,11 +54,7 @@ const EventRequest = () => {
       });
     } catch (error) {
       console.error('Error submitting event request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit event request. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to submit event request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,67 +62,75 @@ const EventRequest = () => {
 
   return (
     <div className="animate-scale-in">
-      <h1 className="content-title">Request for Event</h1>
+      <h1 className="text-2xl font-bold mb-6">Request for Event</h1>
       
-      <div className="dashboard-card max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="association" className="form-label">Association Name</label>
+      <div className="bg-card border border-border rounded-lg shadow-sm p-6 max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="association" className="block text-sm font-medium">
+              Association Name
+            </label>
             <input
               type="text"
               id="association"
               name="association"
               value={formData.association}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter association name"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="eventName" className="form-label">Event Name</label>
+          <div className="space-y-2">
+            <label htmlFor="eventName" className="block text-sm font-medium">
+              Event Name
+            </label>
             <input
               type="text"
               id="eventName"
               name="eventName"
               value={formData.eventName}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter event name"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="date" className="form-label">Event Date</label>
+          <div className="space-y-2">
+            <label htmlFor="date" className="block text-sm font-medium">
+              Event Date
+            </label>
             <input
               type="date"
               id="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="form-input"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="description" className="form-label">Event Description</label>
+          <div className="space-y-2">
+            <label htmlFor="description" className="block text-sm font-medium">
+              Event Description
+            </label>
             <textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="form-textarea"
+              className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Enter event description"
               rows={4}
               required
             />
           </div>
           
-          <div className="mt-6">
-            <CustomButton type="submit" disabled={isSubmitting}>
+          <div className="pt-2">
+            <CustomButton type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </CustomButton>
           </div>

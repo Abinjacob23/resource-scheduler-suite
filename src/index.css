@@ -103,6 +103,36 @@
   @apply pl-72 pr-8 py-6 flex-1; /* Add left padding to account for sidebar */
 }
 
+/* Form styles */
+.form-input,
+.form-textarea,
+.form-select,
+.form-checkbox {
+  @apply border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  @apply px-3 py-2 w-full;
+}
+
+.form-checkbox {
+  @apply h-4 w-4 rounded text-primary;
+}
+
+.form-label {
+  @apply block text-sm font-medium mb-1;
+}
+
+.dashboard-card {
+  @apply bg-card border border-border rounded-lg shadow-sm p-6;
+}
+
+.content-title {
+  @apply text-2xl font-bold mb-6;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .dashboard-header,

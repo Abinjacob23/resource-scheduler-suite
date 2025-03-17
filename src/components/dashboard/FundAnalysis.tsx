@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { FundAnalysisType } from '@/types/dashboard';
 import CustomButton from '../ui/custom-button';
+import { toast } from 'sonner';
 
 const FundAnalysis = () => {
   const [sections, setSections] = useState<FundAnalysisType[]>([
@@ -36,17 +37,17 @@ const FundAnalysis = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Fund analysis submitted:', sections);
-    alert('Fund analysis saved successfully!');
+    toast.success('Fund analysis saved successfully!');
   };
 
   return (
     <div className="animate-scale-in">
-      <h1 className="content-title">Fund Analysis</h1>
+      <h1 className="text-2xl font-bold mb-6">Fund Analysis</h1>
       
-      <div className="dashboard-card max-w-3xl mx-auto">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-4">
+      <div className="bg-card border border-border rounded-lg shadow-sm p-6 max-w-3xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Sections</h2>
               <CustomButton 
                 type="button" 
@@ -68,7 +69,7 @@ const FundAnalysis = () => {
                       type="text"
                       value={section.section}
                       onChange={(e) => handleSectionChange(index, 'section', e.target.value)}
-                      className="form-input"
+                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Section name"
                       required
                     />
@@ -78,7 +79,7 @@ const FundAnalysis = () => {
                       type="number"
                       value={section.amount}
                       onChange={(e) => handleSectionChange(index, 'amount', e.target.value)}
-                      className="form-input"
+                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Amount"
                       min="0"
                       required
@@ -88,7 +89,8 @@ const FundAnalysis = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveSection(index)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label="Remove section"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -98,15 +100,15 @@ const FundAnalysis = () => {
             </div>
           </div>
           
-          <div className="mt-8 p-4 bg-muted/30 rounded-md">
+          <div className="p-4 bg-muted/30 rounded-md">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Total Amount</h3>
               <span className="text-xl font-semibold">${totalAmount.toFixed(2)}</span>
             </div>
           </div>
           
-          <div className="mt-6">
-            <CustomButton type="submit">
+          <div>
+            <CustomButton type="submit" className="w-full">
               Save Analysis
             </CustomButton>
           </div>

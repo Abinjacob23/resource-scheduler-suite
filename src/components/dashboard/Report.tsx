@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { File, Edit, Eye, Download, Plus, Loader2 } from 'lucide-react';
 import { ReportType } from '@/types/dashboard';
@@ -6,6 +5,7 @@ import CustomButton from '../ui/custom-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 type DbReport = {
   id: string;
@@ -77,18 +77,51 @@ const Report = () => {
   };
 
   const handleDownloadClick = (report: ReportType) => {
-    // Create a blob and download it
-    const blob = new Blob([`# ${report.title}\n\n${report.content}`], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${report.title.replace(/\s+/g, '-').toLowerCase()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Create a PDF document
+    const pdf = new jsPDF();
     
-    toast.success(`Report "${report.title}" is being downloaded`);
+    // Add a title to the PDF
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 128); // Navy blue color for title
+    pdf.text(report.title, 20, 20);
+    
+    // Add a divider line
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(20, 25, 190, 25);
+    
+    // Add metadata - creation date
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100); // Gray color for metadata
+    pdf.text(`Created: ${report.createdAt} | Last updated: ${report.updatedAt}`, 20, 33);
+    
+    // Add content
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0); // Black color for content
+    
+    // Split the content into lines to fit the page width
+    const contentLines = pdf.splitTextToSize(report.content, 170);
+    pdf.text(contentLines, 20, 45);
+    
+    // Add page numbers if content is long
+    if (contentLines.length > 40) {
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(10);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 40, pdf.internal.pageSize.getHeight() - 10);
+      }
+    }
+    
+    // Add a footer with organization name
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Event Management System', 20, pdf.internal.pageSize.getHeight() - 10);
+    
+    // Save the PDF
+    pdf.save(`${report.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    
+    toast.success(`Report "${report.title}" is being downloaded as PDF`);
   };
 
   const handleSaveNewReport = async () => {
@@ -207,7 +240,7 @@ const Report = () => {
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
                 <Download className="h-6 w-6 text-green-600" />
               </div>
-              <p className="font-medium">Download Report</p>
+              <p className="font-medium">Download PDF</p>
             </div>
           </div>
           
@@ -351,7 +384,7 @@ const Report = () => {
               className="flex items-center"
             >
               <Download className="mr-2 h-4 w-4" />
-              Download Report
+              Download PDF
             </CustomButton>
           </div>
         </div>

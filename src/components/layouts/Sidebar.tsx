@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Calendar, Package, ClipboardList, FileSpreadsheet, Users, Lock, FileText, Database, CalendarX, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Package, ClipboardList, FileSpreadsheet, Users, Lock, FileText, Database, CalendarX } from 'lucide-react';
 
 type SidebarProps = {
   activeItem: string;
@@ -20,14 +20,14 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
     : [
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
         { id: 'event-request', label: 'Event Request', icon: <Calendar className="h-5 w-5" /> },
+        { id: 'resource-availability', label: 'Resource Availability', icon: <Database className="h-5 w-5" /> },
+        { id: 'cancel-event', label: 'Cancel Event', icon: <CalendarX className="h-5 w-5" /> },
         { id: 'resource-request', label: 'Resource Request', icon: <Package className="h-5 w-5" /> },
         { id: 'fund-analysis', label: 'Fund Analysis', icon: <FileSpreadsheet className="h-5 w-5" /> },
         { id: 'request-status', label: 'Request Status', icon: <ClipboardList className="h-5 w-5" /> },
         { id: 'report', label: 'Report', icon: <FileText className="h-5 w-5" /> },
         { id: 'collaboration', label: 'Collaboration', icon: <Users className="h-5 w-5" /> },
         { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> },
-        { id: 'resource-availability', label: 'Resource Availability', icon: <Database className="h-5 w-5" /> },
-        { id: 'cancel-event', label: 'Cancel Event', icon: <CalendarX className="h-5 w-5" /> },
       ];
 
   return (
@@ -56,17 +56,6 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
             ))}
           </ul>
         </nav>
-        
-        {/* Logout button at bottom of sidebar */}
-        <div className="p-4 border-t border-border mt-auto">
-          <button
-            onClick={() => window.location.href = '/auth'}
-            className="flex items-center w-full p-2 rounded-md text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
-          >
-            <span className="mr-3"><LogOut className="h-5 w-5" /></span>
-            <span>Logout</span>
-          </button>
-        </div>
       </div>
     </div>
   );

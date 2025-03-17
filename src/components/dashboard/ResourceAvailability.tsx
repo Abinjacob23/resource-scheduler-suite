@@ -1,29 +1,85 @@
 
-import { useState } from 'react';
-import { Calendar, Check } from 'lucide-react';
-import { mockCalendarBookings, mockEventRequests, RESOURCE_LABELS } from '@/utils/mock-data';
+import { useState, useEffect } from 'react';
+import { Calendar, Check, Loader2 } from 'lucide-react';
+import { RESOURCE_LABELS } from '@/utils/mock-data';
 import { ResourceType } from '@/types/dashboard';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ResourceAvailability = () => {
-  const approvedEvents = mockEventRequests.filter(event => event.status === 'approved');
+  const { user } = useAuth();
+  const [approvedEvents, setApprovedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [selectedResource, setSelectedResource] = useState<ResourceType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [calendarBookings, setCalendarBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchApprovedEvents();
+      fetchCalendarBookings();
+    }
+  }, [user]);
+
+  const fetchApprovedEvents = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('status', 'approved');
+      
+      if (error) throw error;
+      setApprovedEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching approved events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCalendarBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_bookings')
+        .select('*');
+      
+      if (error) throw error;
+      setCalendarBookings(data || []);
+    } catch (error) {
+      console.error('Error fetching calendar bookings:', error);
+    }
+  };
 
   // Get bookings for the selected resource on the selected date
   const getResourceBookings = () => {
     if (!selectedResource || !selectedDate) return [];
     
     const dateString = selectedDate.toISOString().split('T')[0];
-    return mockCalendarBookings.filter(booking => 
-      booking.resourceId === selectedResource && 
+    return calendarBookings.filter(booking => 
+      booking.resource_id === selectedResource && 
       booking.start.includes(dateString)
     );
   };
 
   const resourceBookings = getResourceBookings();
+
+  if (loading) {
+    return (
+      <div className="animate-scale-in">
+        <h1 className="content-title">Resource Availability</h1>
+        <div className="dashboard-card">
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+            <span>Loading resources...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-scale-in">
@@ -33,31 +89,31 @@ const ResourceAvailability = () => {
         <div className="dashboard-card lg:col-span-1">
           <h2 className="text-lg font-semibold mb-4">Approved Events</h2>
           <div className="space-y-2">
-            {approvedEvents.map((event, index) => (
-              <div 
-                key={index} 
-                className={`border rounded-md p-3 cursor-pointer transition-colors ${
-                  selectedEvent === event.eventName 
-                    ? 'bg-primary/10 border-primary' 
-                    : 'hover:bg-muted/10'
-                }`}
-                onClick={() => setSelectedEvent(event.eventName)}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium">{event.eventName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(event.date).toLocaleDateString()}
-                    </p>
+            {approvedEvents.length > 0 ? (
+              approvedEvents.map((event) => (
+                <div 
+                  key={event.id} 
+                  className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                    selectedEvent === event.event_name 
+                      ? 'bg-primary/10 border-primary' 
+                      : 'hover:bg-muted/10'
+                  }`}
+                  onClick={() => setSelectedEvent(event.event_name)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{event.event_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {selectedEvent === event.event_name && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
                   </div>
-                  {selectedEvent === event.eventName && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
                 </div>
-              </div>
-            ))}
-            
-            {approvedEvents.length === 0 && (
+              ))
+            ) : (
               <div className="text-center p-4 text-muted-foreground">
                 No approved events available.
               </div>
@@ -128,7 +184,7 @@ const ResourceAvailability = () => {
                               <div key={booking.id} className="border rounded-md p-3">
                                 <p className="font-medium">{booking.title}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {new Date(booking.start).toLocaleTimeString()} - {new Date(booking.end).toLocaleTimeString()}
+                                  {new Date(booking.start).toLocaleTimeString()} - {new Date(booking.end1).toLocaleTimeString()}
                                 </p>
                               </div>
                             ))}

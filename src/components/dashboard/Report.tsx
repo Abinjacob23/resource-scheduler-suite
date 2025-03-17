@@ -1,18 +1,65 @@
 
-import { useState } from 'react';
-import { File, Edit, Eye, Download, Plus } from 'lucide-react';
-import { mockReports } from '@/utils/mock-data';
+import { useState, useEffect } from 'react';
+import { File, Edit, Eye, Download, Plus, Loader2 } from 'lucide-react';
 import { ReportType } from '@/types/dashboard';
 import CustomButton from '../ui/custom-button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+type DbReport = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};
 
 const Report = () => {
+  const { user } = useAuth();
   const [activeView, setActiveView] = useState<'list' | 'create' | 'edit' | 'preview'>('list');
-  const [reports, setReports] = useState<ReportType[]>(mockReports);
+  const [reports, setReports] = useState<ReportType[]>([]);
   const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
   const [newReport, setNewReport] = useState<Omit<ReportType, 'id' | 'createdAt' | 'updatedAt'>>({
     title: '',
     content: ''
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchReports();
+    }
+  }, [user]);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Convert from DB format to app format
+      const formattedReports: ReportType[] = (data || []).map((report: DbReport) => ({
+        id: report.id,
+        title: report.title,
+        content: report.content,
+        createdAt: new Date(report.created_at).toISOString().split('T')[0],
+        updatedAt: new Date(report.updated_at).toISOString().split('T')[0]
+      }));
+      
+      setReports(formattedReports);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      toast.error('Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateClick = () => {
     setActiveView('create');
@@ -30,39 +77,89 @@ const Report = () => {
   };
 
   const handleDownloadClick = (report: ReportType) => {
-    // In a real app, this would trigger a download
-    console.log(`Downloading report: ${report.title}`);
-    alert(`Report "${report.title}" is being downloaded`);
+    // Create a blob and download it
+    const blob = new Blob([`# ${report.title}\n\n${report.content}`], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report.title.replace(/\s+/g, '-').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success(`Report "${report.title}" is being downloaded`);
   };
 
-  const handleSaveNewReport = () => {
-    const date = new Date().toISOString().split('T')[0];
-    const newReportWithId: ReportType = {
-      id: `${reports.length + 1}`,
-      title: newReport.title,
-      content: newReport.content,
-      createdAt: date,
-      updatedAt: date
-    };
+  const handleSaveNewReport = async () => {
+    if (!user) {
+      toast.error('You must be logged in to create a report');
+      return;
+    }
     
-    setReports([...reports, newReportWithId]);
-    setActiveView('list');
-    alert('Report created successfully!');
+    if (!newReport.title.trim() || !newReport.content.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .insert({
+          title: newReport.title,
+          content: newReport.content,
+          user_id: user.id
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      await fetchReports();
+      setActiveView('list');
+      toast.success('Report created successfully!');
+    } catch (error) {
+      console.error('Error creating report:', error);
+      toast.error('Failed to create report');
+    }
   };
 
-  const handleUpdateReport = () => {
-    if (!selectedReport) return;
+  const handleUpdateReport = async () => {
+    if (!selectedReport || !user) return;
     
-    const updatedReports = reports.map(report => 
-      report.id === selectedReport.id 
-        ? { ...selectedReport, updatedAt: new Date().toISOString().split('T')[0] }
-        : report
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .update({
+          title: selectedReport.title,
+          content: selectedReport.content,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedReport.id);
+      
+      if (error) throw error;
+      
+      await fetchReports();
+      setActiveView('list');
+      toast.success('Report updated successfully!');
+    } catch (error) {
+      console.error('Error updating report:', error);
+      toast.error('Failed to update report');
+    }
+  };
+
+  if (loading && activeView === 'list') {
+    return (
+      <div className="animate-scale-in">
+        <h1 className="content-title">Reports</h1>
+        <div className="dashboard-card">
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+            <span>Loading reports...</span>
+          </div>
+        </div>
+      </div>
     );
-    
-    setReports(updatedReports);
-    setActiveView('list');
-    alert('Report updated successfully!');
-  };
+  }
 
   return (
     <div className="animate-scale-in">
@@ -115,40 +212,46 @@ const Report = () => {
           </div>
           
           <h2 className="text-lg font-semibold mb-4">Recent Reports</h2>
-          <div className="space-y-3">
-            {reports.map((report) => (
-              <div key={report.id} className="border rounded-md p-4 hover:bg-muted/10 transition-colors">
-                <div className="flex justify-between">
-                  <div>
-                    <h3 className="font-medium">{report.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Created: {report.createdAt} | Updated: {report.updatedAt}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handlePreviewClick(report)}
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleEditClick(report)}
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDownloadClick(report)}
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
+          {reports.length > 0 ? (
+            <div className="space-y-3">
+              {reports.map((report) => (
+                <div key={report.id} className="border rounded-md p-4 hover:bg-muted/10 transition-colors">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-medium">{report.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Created: {report.createdAt} | Updated: {report.updatedAt}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handlePreviewClick(report)}
+                        className="p-1 rounded hover:bg-muted transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleEditClick(report)}
+                        className="p-1 rounded hover:bg-muted transition-colors"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDownloadClick(report)}
+                        className="p-1 rounded hover:bg-muted transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No reports found. Create your first report using the options above.
+            </div>
+          )}
         </div>
       )}
       

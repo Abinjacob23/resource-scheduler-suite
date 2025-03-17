@@ -1,65 +1,31 @@
+
 import { useState, useEffect } from 'react';
-import { File, Edit, Eye, Download, Plus, Loader2 } from 'lucide-react';
-import { ReportType } from '@/types/dashboard';
-import CustomButton from '../ui/custom-button';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-
-type DbReport = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-};
+import ReportList from './report/ReportList';
+import ReportCreate from './report/ReportCreate';
+import ReportEdit from './report/ReportEdit';
+import ReportPreview from './report/ReportPreview';
+import { useReports } from './report/useReports';
+import { ReportType } from '@/types/dashboard';
 
 const Report = () => {
   const { user } = useAuth();
   const [activeView, setActiveView] = useState<'list' | 'create' | 'edit' | 'preview'>('list');
-  const [reports, setReports] = useState<ReportType[]>([]);
   const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
   const [newReport, setNewReport] = useState<Omit<ReportType, 'id' | 'createdAt' | 'updatedAt'>>({
     title: '',
     content: ''
   });
-  const [loading, setLoading] = useState(true);
+  
+  const { reports, loading, fetchReports, createReport, updateReport } = useReports(user);
 
   useEffect(() => {
     if (user) {
       fetchReports();
     }
-  }, [user]);
-
-  const fetchReports = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Convert from DB format to app format
-      const formattedReports: ReportType[] = (data || []).map((report: DbReport) => ({
-        id: report.id,
-        title: report.title,
-        content: report.content,
-        createdAt: new Date(report.created_at).toISOString().split('T')[0],
-        updatedAt: new Date(report.updated_at).toISOString().split('T')[0]
-      }));
-      
-      setReports(formattedReports);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-      toast.error('Failed to load reports');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, fetchReports]);
 
   const handleCreateClick = () => {
     setActiveView('create');
@@ -76,54 +42,6 @@ const Report = () => {
     setActiveView('preview');
   };
 
-  const handleDownloadClick = (report: ReportType) => {
-    // Create a PDF document
-    const pdf = new jsPDF();
-    
-    // Add a title to the PDF
-    pdf.setFontSize(18);
-    pdf.setTextColor(0, 0, 128); // Navy blue color for title
-    pdf.text(report.title, 20, 20);
-    
-    // Add a divider line
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(20, 25, 190, 25);
-    
-    // Add metadata - creation date
-    pdf.setFontSize(10);
-    pdf.setTextColor(100, 100, 100); // Gray color for metadata
-    pdf.text(`Created: ${report.createdAt} | Last updated: ${report.updatedAt}`, 20, 33);
-    
-    // Add content
-    pdf.setFontSize(12);
-    pdf.setTextColor(0, 0, 0); // Black color for content
-    
-    // Split the content into lines to fit the page width
-    const contentLines = pdf.splitTextToSize(report.content, 170);
-    pdf.text(contentLines, 20, 45);
-    
-    // Add page numbers if content is long
-    if (contentLines.length > 40) {
-      const pageCount = pdf.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(10);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() - 40, pdf.internal.pageSize.getHeight() - 10);
-      }
-    }
-    
-    // Add a footer with organization name
-    pdf.setFontSize(10);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text('Event Management System', 20, pdf.internal.pageSize.getHeight() - 10);
-    
-    // Save the PDF
-    pdf.save(`${report.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-    
-    toast.success(`Report "${report.title}" is being downloaded as PDF`);
-  };
-
   const handleSaveNewReport = async () => {
     if (!user) {
       toast.error('You must be logged in to create a report');
@@ -136,18 +54,7 @@ const Report = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('reports')
-        .insert({
-          title: newReport.title,
-          content: newReport.content,
-          user_id: user.id
-        })
-        .select();
-      
-      if (error) throw error;
-      
-      await fetchReports();
+      await createReport(newReport);
       setActiveView('list');
       toast.success('Report created successfully!');
     } catch (error) {
@@ -160,18 +67,7 @@ const Report = () => {
     if (!selectedReport || !user) return;
     
     try {
-      const { error } = await supabase
-        .from('reports')
-        .update({
-          title: selectedReport.title,
-          content: selectedReport.content,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedReport.id);
-      
-      if (error) throw error;
-      
-      await fetchReports();
+      await updateReport(selectedReport);
       setActiveView('list');
       toast.success('Report updated successfully!');
     } catch (error) {
@@ -199,195 +95,42 @@ const Report = () => {
       <div className="flex justify-between items-center mb-4">
         <h1 className="content-title">Reports</h1>
         {activeView !== 'list' && (
-          <CustomButton 
+          <button 
             onClick={() => setActiveView('list')} 
-            variant="outline"
+            className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm"
           >
             Back to List
-          </CustomButton>
+          </button>
         )}
       </div>
       
       {activeView === 'list' && (
-        <div className="dashboard-card">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="dashboard-card p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors"
-                 onClick={handleCreateClick}>
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                <Plus className="h-6 w-6 text-primary" />
-              </div>
-              <p className="font-medium">Create Report</p>
-            </div>
-            
-            <div className="dashboard-card p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors"
-                 onClick={() => reports.length > 0 && handleEditClick(reports[0])}>
-              <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-                <Edit className="h-6 w-6 text-amber-600" />
-              </div>
-              <p className="font-medium">Edit Report</p>
-            </div>
-            
-            <div className="dashboard-card p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors"
-                 onClick={() => reports.length > 0 && handlePreviewClick(reports[0])}>
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <Eye className="h-6 w-6 text-blue-600" />
-              </div>
-              <p className="font-medium">Preview Report</p>
-            </div>
-            
-            <div className="dashboard-card p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors"
-                 onClick={() => reports.length > 0 && handleDownloadClick(reports[0])}>
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                <Download className="h-6 w-6 text-green-600" />
-              </div>
-              <p className="font-medium">Download PDF</p>
-            </div>
-          </div>
-          
-          <h2 className="text-lg font-semibold mb-4">Recent Reports</h2>
-          {reports.length > 0 ? (
-            <div className="space-y-3">
-              {reports.map((report) => (
-                <div key={report.id} className="border rounded-md p-4 hover:bg-muted/10 transition-colors">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-medium">{report.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Created: {report.createdAt} | Updated: {report.updatedAt}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handlePreviewClick(report)}
-                        className="p-1 rounded hover:bg-muted transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleEditClick(report)}
-                        className="p-1 rounded hover:bg-muted transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDownloadClick(report)}
-                        className="p-1 rounded hover:bg-muted transition-colors"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No reports found. Create your first report using the options above.
-            </div>
-          )}
-        </div>
+        <ReportList 
+          reports={reports} 
+          onCreateClick={handleCreateClick}
+          onEditClick={handleEditClick}
+          onPreviewClick={handlePreviewClick}
+        />
       )}
       
       {activeView === 'create' && (
-        <div className="dashboard-card">
-          <h2 className="text-lg font-semibold mb-4">Create New Report</h2>
-          <div className="space-y-4">
-            <div className="form-group">
-              <label htmlFor="title" className="form-label">Report Title</label>
-              <input
-                type="text"
-                id="title"
-                value={newReport.title}
-                onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
-                className="form-input"
-                placeholder="Enter report title"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="content" className="form-label">Report Content</label>
-              <textarea
-                id="content"
-                value={newReport.content}
-                onChange={(e) => setNewReport({ ...newReport, content: e.target.value })}
-                className="form-textarea"
-                placeholder="Write your report content here..."
-                rows={10}
-                required
-              />
-            </div>
-            
-            <div className="mt-4">
-              <CustomButton onClick={handleSaveNewReport}>
-                Save Report
-              </CustomButton>
-            </div>
-          </div>
-        </div>
+        <ReportCreate
+          newReport={newReport}
+          setNewReport={setNewReport}
+          onSave={handleSaveNewReport}
+        />
       )}
       
       {activeView === 'edit' && selectedReport && (
-        <div className="dashboard-card">
-          <h2 className="text-lg font-semibold mb-4">Edit Report</h2>
-          <div className="space-y-4">
-            <div className="form-group">
-              <label htmlFor="edit-title" className="form-label">Report Title</label>
-              <input
-                type="text"
-                id="edit-title"
-                value={selectedReport.title}
-                onChange={(e) => setSelectedReport({ ...selectedReport, title: e.target.value })}
-                className="form-input"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="edit-content" className="form-label">Report Content</label>
-              <textarea
-                id="edit-content"
-                value={selectedReport.content}
-                onChange={(e) => setSelectedReport({ ...selectedReport, content: e.target.value })}
-                className="form-textarea"
-                rows={10}
-                required
-              />
-            </div>
-            
-            <div className="mt-4">
-              <CustomButton onClick={handleUpdateReport}>
-                Update Report
-              </CustomButton>
-            </div>
-          </div>
-        </div>
+        <ReportEdit
+          report={selectedReport}
+          setReport={setSelectedReport}
+          onUpdate={handleUpdateReport}
+        />
       )}
       
       {activeView === 'preview' && selectedReport && (
-        <div className="dashboard-card">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">{selectedReport.title}</h2>
-            <div className="text-sm text-muted-foreground">
-              Last updated: {selectedReport.updatedAt}
-            </div>
-          </div>
-          
-          <div className="prose max-w-none">
-            <p className="whitespace-pre-line">{selectedReport.content}</p>
-          </div>
-          
-          <div className="mt-6 flex justify-end">
-            <CustomButton 
-              onClick={() => handleDownloadClick(selectedReport)} 
-              variant="outline"
-              className="flex items-center"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </CustomButton>
-          </div>
-        </div>
+        <ReportPreview report={selectedReport} />
       )}
     </div>
   );

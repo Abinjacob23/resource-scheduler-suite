@@ -32,9 +32,9 @@ const AdminEventRequests = () => {
   useEffect(() => {
     fetchEventRequests();
 
-    // Set up real-time listener for new event requests
+    // Set up real-time listener for event requests
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('event-changes')
       .on(
         'postgres_changes',
         {
@@ -44,10 +44,13 @@ const AdminEventRequests = () => {
         },
         (payload) => {
           console.log('Real-time event update:', payload);
-          fetchEventRequests(); // Refresh the list when changes occur
+          // Refresh the entire list to ensure consistent state
+          fetchEventRequests();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Event subscription status:', status);
+      });
 
     // Cleanup on unmount
     return () => {
@@ -57,6 +60,7 @@ const AdminEventRequests = () => {
 
   const fetchEventRequests = async () => {
     try {
+      console.log('Fetching event requests...');
       setLoading(true);
       const { data, error } = await supabase
         .from('events')
@@ -64,6 +68,8 @@ const AdminEventRequests = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Received event requests:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching event requests:', error);

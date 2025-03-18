@@ -31,9 +31,9 @@ const AdminResourceRequests = () => {
   useEffect(() => {
     fetchResourceRequests();
 
-    // Set up real-time listener for new resource requests
+    // Set up real-time listener for resource requests
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('resource-changes')
       .on(
         'postgres_changes',
         {
@@ -43,10 +43,13 @@ const AdminResourceRequests = () => {
         },
         (payload) => {
           console.log('Real-time resource request update:', payload);
-          fetchResourceRequests(); // Refresh the list when changes occur
+          // Refresh the entire list to ensure consistent state
+          fetchResourceRequests();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Resource subscription status:', status);
+      });
 
     // Cleanup on unmount
     return () => {
@@ -56,6 +59,7 @@ const AdminResourceRequests = () => {
 
   const fetchResourceRequests = async () => {
     try {
+      console.log('Fetching resource requests...');
       setLoading(true);
       const { data, error } = await supabase
         .from('resource_requests')
@@ -63,6 +67,8 @@ const AdminResourceRequests = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Received resource requests:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching resource requests:', error);

@@ -50,6 +50,9 @@ const ResourceRequest = () => {
     setIsSubmitting(true);
     
     try {
+      // Show toast immediately to inform user the request is being processed
+      toast.loading("Submitting your resource request...");
+      
       const { error } = await supabase.from('resource_requests').insert({
         user_id: user.id,
         event_name: formData.eventName,
@@ -60,7 +63,8 @@ const ResourceRequest = () => {
       
       if (error) throw error;
       
-      toast.success("Resource request submitted successfully.");
+      toast.dismiss();
+      toast.success("Resource request submitted successfully. Admins can now review it.");
       
       // Reset form
       setFormData({
@@ -70,6 +74,7 @@ const ResourceRequest = () => {
       });
     } catch (error) {
       console.error('Error submitting resource request:', error);
+      toast.dismiss();
       toast.error("Failed to submit resource request. Please try again.");
     } finally {
       setIsSubmitting(false);

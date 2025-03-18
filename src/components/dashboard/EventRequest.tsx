@@ -32,6 +32,9 @@ const EventRequest = () => {
     setIsSubmitting(true);
     
     try {
+      // Show toast immediately to inform user the request is being processed
+      toast.loading("Submitting your request...");
+      
       const { error } = await supabase.from('events').insert({
         user_id: user.id,
         association: formData.association,
@@ -43,7 +46,8 @@ const EventRequest = () => {
       
       if (error) throw error;
       
-      toast.success("Event request submitted successfully.");
+      toast.dismiss();
+      toast.success("Event request submitted successfully. Admins can now review it.");
       
       // Reset form
       setFormData({
@@ -54,6 +58,7 @@ const EventRequest = () => {
       });
     } catch (error) {
       console.error('Error submitting event request:', error);
+      toast.dismiss();
       toast.error("Failed to submit event request. Please try again.");
     } finally {
       setIsSubmitting(false);

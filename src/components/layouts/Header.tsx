@@ -62,13 +62,6 @@ const Header = () => {
       <div className="flex items-center gap-4">
         {(user || localStorage.getItem('adminSession')) && (
           <>
-            {isAdmin && !window.location.pathname.includes('/admin') && (
-              <Link to="/admin">
-                <Button variant="outline" size="sm">
-                  Admin Panel
-                </Button>
-              </Link>
-            )}
             <span className="text-sm text-muted-foreground">
               {user?.email || localStorage.getItem('adminSession')}
             </span>

@@ -30,6 +30,28 @@ const AdminResourceRequests = () => {
 
   useEffect(() => {
     fetchResourceRequests();
+
+    // Set up real-time listener for new resource requests
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'resource_requests'
+        },
+        (payload) => {
+          console.log('Real-time resource request update:', payload);
+          fetchResourceRequests(); // Refresh the list when changes occur
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchResourceRequests = async () => {

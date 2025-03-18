@@ -31,6 +31,28 @@ const AdminEventRequests = () => {
 
   useEffect(() => {
     fetchEventRequests();
+
+    // Set up real-time listener for new event requests
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'events'
+        },
+        (payload) => {
+          console.log('Real-time event update:', payload);
+          fetchEventRequests(); // Refresh the list when changes occur
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchEventRequests = async () => {

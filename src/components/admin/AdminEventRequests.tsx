@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from '@/contexts/AuthContext';
 
 type EventRequest = {
   id: string;
@@ -32,6 +33,7 @@ type EventRequest = {
 };
 
 const AdminEventRequests = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -39,24 +41,24 @@ const AdminEventRequests = () => {
   const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin
+    // Check if user is admin before fetching data
     const checkIsAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        console.error('No user session found');
-        return false;
+      // Check if user email is admin email
+      if (!user) {
+        const adminSession = localStorage.getItem('adminSession');
+        return adminSession === 'admin@example.com' || adminSession === 'admin@gmail.com';
       }
       
-      const email = session.user.email;
+      const email = user.email;
       // List of admin emails
       const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
       return adminEmails.includes(email || '');
     };
 
-    // Fetch event requests
+    // Fetch event requests if user is admin
     const fetchEventRequests = async () => {
       try {
-        console.log('Admin: Fetching event requests...');
+        console.log('Admin: Attempting to fetch event requests...');
         setLoading(true);
         
         // First check if user is admin
@@ -68,12 +70,16 @@ const AdminEventRequests = () => {
           return;
         }
         
+        console.log('Admin: User is admin, fetching event requests...');
         const { data, error } = await supabase
           .from('events')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching event requests:', error);
+          throw error;
+        }
         
         console.log('Admin: Received event requests:', data);
         setRequests(data || []);
@@ -98,7 +104,7 @@ const AdminEventRequests = () => {
           table: 'events'
         },
         (payload) => {
-          console.log('Admin: Real-time event update:', payload);
+          console.log('Admin: Real-time event update received:', payload);
           // Refresh the entire list to ensure consistent state
           fetchEventRequests();
         }
@@ -111,7 +117,7 @@ const AdminEventRequests = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   const updateRequestStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {

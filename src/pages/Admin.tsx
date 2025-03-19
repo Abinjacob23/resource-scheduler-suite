@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Admin = () => {
   const { user } = useAuth();
@@ -14,8 +15,8 @@ const Admin = () => {
   // Function to check if a user is an admin
   const isAdmin = (email?: string | null) => {
     if (!email) return checkLocalAdmin();
-    // Replace this with your actual admin emails
-    const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
+    // Admin emails - strictly restrict to these emails
+    const adminEmails = ['admin@example.com', 'admin@gmail.com', 'test@example.com'];
     return adminEmails.includes(email);
   };
 
@@ -39,6 +40,7 @@ const Admin = () => {
       
       // First check localStorage
       if (checkLocalAdmin()) {
+        console.log('Admin access granted via localStorage');
         setIsUserAdmin(true);
         setIsCheckingAdmin(false);
         return;
@@ -46,9 +48,12 @@ const Admin = () => {
       
       // Then check user email
       if (user && isAdmin(user.email)) {
+        console.log('Admin access granted via email:', user.email);
         setIsUserAdmin(true);
       } else {
+        console.log('Admin access denied for user:', user?.email);
         setIsUserAdmin(false);
+        toast.error('You do not have admin privileges');
       }
       
       setIsCheckingAdmin(false);

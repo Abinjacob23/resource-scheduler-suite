@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { RESOURCE_LABELS } from '@/utils/mock-data';
@@ -10,15 +10,57 @@ import { toast } from 'sonner';
 const ResourceRequest = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [approvedEvents, setApprovedEvents] = useState<Array<{id: string, event_name: string}>>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
+    eventId: '',
     eventName: '',
     date: '',
     resources: [] as ResourceType[]
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (user) {
+      fetchApprovedEvents();
+    }
+  }, [user]);
+
+  const fetchApprovedEvents = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, event_name, date')
+        .eq('status', 'approved')
+        .eq('user_id', user?.id || '');
+      
+      if (error) throw error;
+      
+      console.log('Approved events:', data);
+      setApprovedEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching approved events:', error);
+      toast.error('Failed to load approved events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'eventId' && value) {
+      const selectedEvent = approvedEvents.find(event => event.id === value);
+      if (selectedEvent) {
+        setFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+          eventName: selectedEvent.event_name
+        }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleResourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,16 +89,20 @@ const ResourceRequest = () => {
       return;
     }
     
+    if (!formData.eventId) {
+      toast.error("Please select an approved event.");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Show toast immediately to inform user the request is being processed
       toast.loading("Submitting your resource request...");
       
       const { error } = await supabase.from('resource_requests').insert({
         user_id: user.id,
         event_name: formData.eventName,
-        date: formData.date,
+        date: formData.date || new Date().toISOString().split('T')[0],
         resources: formData.resources,
         status: 'pending'
       });
@@ -68,6 +114,7 @@ const ResourceRequest = () => {
       
       // Reset form
       setFormData({
+        eventId: '',
         eventName: '',
         date: '',
         resources: []
@@ -81,6 +128,37 @@ const ResourceRequest = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="animate-scale-in p-6">
+        <h1 className="text-2xl font-bold mb-6">Request for Resource</h1>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2">Loading approved events...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (approvedEvents.length === 0) {
+    return (
+      <div className="animate-scale-in p-6">
+        <h1 className="text-2xl font-bold mb-6">Request for Resource</h1>
+        <div className="bg-card border border-border rounded-lg shadow-sm p-6 max-w-2xl mx-auto">
+          <div className="text-center py-8">
+            <h2 className="text-lg font-medium mb-2">No Approved Events</h2>
+            <p className="text-muted-foreground mb-4">
+              You need to have an approved event before you can request resources.
+            </p>
+            <CustomButton onClick={() => window.location.href = '/dashboard/event-request'} className="mt-2">
+              Create an Event Request
+            </CustomButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-scale-in">
       <h1 className="text-2xl font-bold mb-6">Request for Resource</h1>
@@ -88,24 +166,29 @@ const ResourceRequest = () => {
       <div className="bg-card border border-border rounded-lg shadow-sm p-6 max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="eventName" className="block text-sm font-medium">
-              Event Name
+            <label htmlFor="eventId" className="block text-sm font-medium">
+              Select Approved Event
             </label>
-            <input
-              type="text"
-              id="eventName"
-              name="eventName"
-              value={formData.eventName}
+            <select
+              id="eventId"
+              name="eventId"
+              value={formData.eventId}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Enter event name"
               required
-            />
+            >
+              <option value="">Select an approved event</option>
+              {approvedEvents.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.event_name}
+                </option>
+              ))}
+            </select>
           </div>
           
           <div className="space-y-2">
             <label htmlFor="date" className="block text-sm font-medium">
-              Event Date
+              Request Date
             </label>
             <input
               type="date"
@@ -114,8 +197,10 @@ const ResourceRequest = () => {
               value={formData.date}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              required
             />
+            <p className="text-xs text-muted-foreground">
+              Optional. If not specified, today's date will be used.
+            </p>
           </div>
           
           <div className="space-y-2">

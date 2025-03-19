@@ -33,7 +33,7 @@ const AdminResourceRequests = () => {
 
     // Set up real-time listener for resource requests
     const channel = supabase
-      .channel('resource-changes')
+      .channel('admin-resource-changes')
       .on(
         'postgres_changes',
         {
@@ -42,13 +42,13 @@ const AdminResourceRequests = () => {
           table: 'resource_requests'
         },
         (payload) => {
-          console.log('Real-time resource request update:', payload);
+          console.log('Admin: Real-time resource request update:', payload);
           // Refresh the entire list to ensure consistent state
           fetchResourceRequests();
         }
       )
       .subscribe((status) => {
-        console.log('Resource subscription status:', status);
+        console.log('Admin: Resource subscription status:', status);
       });
 
     // Cleanup on unmount
@@ -59,7 +59,7 @@ const AdminResourceRequests = () => {
 
   const fetchResourceRequests = async () => {
     try {
-      console.log('Fetching resource requests...');
+      console.log('Admin: Fetching resource requests...');
       setLoading(true);
       const { data, error } = await supabase
         .from('resource_requests')
@@ -68,7 +68,7 @@ const AdminResourceRequests = () => {
 
       if (error) throw error;
       
-      console.log('Received resource requests:', data);
+      console.log('Admin: Received resource requests:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching resource requests:', error);

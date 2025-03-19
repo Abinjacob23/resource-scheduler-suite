@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -13,6 +13,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type EventRequest = {
   id: string;
@@ -28,13 +35,15 @@ const AdminEventRequests = () => {
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventRequest | null>(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     fetchEventRequests();
 
     // Set up real-time listener for event requests
     const channel = supabase
-      .channel('event-changes')
+      .channel('admin-event-changes')
       .on(
         'postgres_changes',
         {
@@ -49,7 +58,7 @@ const AdminEventRequests = () => {
         }
       )
       .subscribe((status) => {
-        console.log('Event subscription status:', status);
+        console.log('Admin event subscription status:', status);
       });
 
     // Cleanup on unmount
@@ -60,7 +69,7 @@ const AdminEventRequests = () => {
 
   const fetchEventRequests = async () => {
     try {
-      console.log('Fetching event requests...');
+      console.log('Admin: Fetching event requests...');
       setLoading(true);
       const { data, error } = await supabase
         .from('events')
@@ -69,7 +78,7 @@ const AdminEventRequests = () => {
 
       if (error) throw error;
       
-      console.log('Received event requests:', data);
+      console.log('Admin: Received event requests:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching event requests:', error);
@@ -94,10 +103,10 @@ const AdminEventRequests = () => {
         req.id === id ? { ...req, status } : req
       ));
       
-      toast.success(`Request ${status} successfully`);
+      toast.success(`Event request ${status} successfully`);
     } catch (error) {
       console.error(`Error ${status} request:`, error);
-      toast.error(`Failed to ${status} request`);
+      toast.error(`Failed to ${status} event request`);
     } finally {
       setProcessing(null);
     }
@@ -112,6 +121,11 @@ const AdminEventRequests = () => {
       default:
         return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pending</Badge>;
     }
+  };
+
+  const viewEventDetails = (event: EventRequest) => {
+    setSelectedEvent(event);
+    setOpenDialog(true);
   };
 
   if (loading) {
@@ -147,7 +161,19 @@ const AdminEventRequests = () => {
               {requests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>{request.association}</TableCell>
-                  <TableCell>{request.event_name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <span className="mr-2">{request.event_name}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => viewEventDetails(request)}
+                        className="h-6 w-6 rounded-full"
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
                   <TableCell className="text-right">
@@ -195,6 +221,46 @@ const AdminEventRequests = () => {
           </Table>
         </div>
       )}
+
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Event Details</DialogTitle>
+            <DialogDescription>
+              Complete information about the event request
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedEvent && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <h3 className="text-sm font-medium">Association</h3>
+                <p>{selectedEvent.association}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Event Name</h3>
+                <p>{selectedEvent.event_name}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Date</h3>
+                <p>{new Date(selectedEvent.date).toLocaleDateString()}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Description</h3>
+                <p className="whitespace-pre-wrap">{selectedEvent.description || 'No description provided'}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium">Status</h3>
+                <div className="mt-1">{getStatusBadge(selectedEvent.status)}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -39,6 +39,52 @@ const AdminEventRequests = () => {
   const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
+    // Check if user is admin
+    const checkIsAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.error('No user session found');
+        return false;
+      }
+      
+      const email = session.user.email;
+      // List of admin emails
+      const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
+      return adminEmails.includes(email || '');
+    };
+
+    // Fetch event requests
+    const fetchEventRequests = async () => {
+      try {
+        console.log('Admin: Fetching event requests...');
+        setLoading(true);
+        
+        // First check if user is admin
+        const isAdmin = await checkIsAdmin();
+        if (!isAdmin) {
+          console.error('Non-admin user attempted to access event requests');
+          toast.error('You do not have permission to view event requests');
+          setLoading(false);
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        console.log('Admin: Received event requests:', data);
+        setRequests(data || []);
+      } catch (error) {
+        console.error('Error fetching event requests:', error);
+        toast.error('Failed to load event requests');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchEventRequests();
 
     // Set up real-time listener for event requests
@@ -52,7 +98,7 @@ const AdminEventRequests = () => {
           table: 'events'
         },
         (payload) => {
-          console.log('Real-time event update:', payload);
+          console.log('Admin: Real-time event update:', payload);
           // Refresh the entire list to ensure consistent state
           fetchEventRequests();
         }
@@ -66,27 +112,6 @@ const AdminEventRequests = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const fetchEventRequests = async () => {
-    try {
-      console.log('Admin: Fetching event requests...');
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      console.log('Admin: Received event requests:', data);
-      setRequests(data || []);
-    } catch (error) {
-      console.error('Error fetching event requests:', error);
-      toast.error('Failed to load event requests');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updateRequestStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {

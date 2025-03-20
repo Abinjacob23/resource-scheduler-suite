@@ -1,62 +1,91 @@
-
-import { LayoutDashboard, Calendar, Package, ClipboardList, FileSpreadsheet, Users, Lock, FileText, Database, CalendarX } from 'lucide-react';
+import { useState } from 'react';
+import {
+  LayoutDashboard,
+  Calendar,
+  Package,
+  DollarSign,
+  ClipboardList,
+  Lock,
+  CalendarX
+} from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 type SidebarProps = {
   activeItem: string;
   onMenuItemClick: (itemId: string) => void;
   isAdmin?: boolean;
-}
+};
 
 const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps) => {
-  // Define menu items based on isAdmin flag
-  const menuItems = isAdmin 
-    ? [
-        { id: 'admin-dashboard', label: 'Event Schedule', icon: <Calendar className="h-5 w-5" /> },
-        { id: 'event-request', label: 'Event Requests', icon: <ClipboardList className="h-5 w-5" /> },
-        { id: 'resource-request', label: 'Resource Requests', icon: <Package className="h-5 w-5" /> },
-        { id: 'cancel-event', label: 'Cancel Events', icon: <CalendarX className="h-5 w-5" /> },
-        { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> },
-      ]
-    : [
-        { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
-        { id: 'event-request', label: 'Event Request', icon: <Calendar className="h-5 w-5" /> },
-        { id: 'resource-availability', label: 'Resource Availability', icon: <Database className="h-5 w-5" /> },
-        { id: 'cancel-event', label: 'Cancel Event', icon: <CalendarX className="h-5 w-5" /> },
-        { id: 'resource-request', label: 'Resource Request', icon: <Package className="h-5 w-5" /> },
-        { id: 'fund-analysis', label: 'Fund Analysis', icon: <FileSpreadsheet className="h-5 w-5" /> },
-        { id: 'request-status', label: 'Request Status', icon: <ClipboardList className="h-5 w-5" /> },
-        { id: 'report', label: 'Report', icon: <FileText className="h-5 w-5" /> },
-        { id: 'collaboration', label: 'Collaboration', icon: <Users className="h-5 w-5" /> },
-        { id: 'change-password', label: 'Change Password', icon: <Lock className="h-5 w-5" /> },
-      ];
+  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleItemClick = (itemId: string) => {
+    onMenuItemClick(itemId);
+    // Close the sidebar on mobile after clicking an item
+    if (window.innerWidth < 768) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: "event-request", label: "Event Request", icon: <Calendar className="h-5 w-5" /> },
+    { id: "resource-request", label: "Resource Request", icon: <Package className="h-5 w-5" /> },
+    { id: "fund-analysis", label: "Fund Analysis", icon: <DollarSign className="h-5 w-5" /> },
+    { id: "request-status", label: "Request Status", icon: <ClipboardList className="h-5 w-5" /> },
+    { id: "report", label: "Report", icon: <ClipboardList className="h-5 w-5" /> },
+    { id: "collaboration", label: "Collaboration", icon: <ClipboardList className="h-5 w-5" /> },
+    { id: "resource-availability", label: "Resource Availability", icon: <Package className="h-5 w-5" /> },
+    { id: "cancel-event", label: "Cancel Event", icon: <CalendarX className="h-5 w-5" /> },
+    { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
+  ];
+
+  const adminMenuItems = [
+    { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
+    { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },
+    { id: "fund-request", label: "Fund Requests", icon: <DollarSign className="h-5 w-5" /> },
+    { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
+    { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
+  ];
 
   return (
-    <div className="bg-sidebar h-full w-64 overflow-y-auto border-r border-border fixed left-0 top-0 z-20">
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-xl font-bold">{isAdmin ? 'Admin Panel' : 'Dashboard'}</h2>
-        </div>
-        
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => onMenuItemClick(item.id)}
-                  className={`flex items-center w-full p-2 rounded-md transition-colors ${
-                    activeItem === item.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+    <div
+      className={cn(
+        "fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out z-50",
+        !isMenuOpen ? "-translate-x-full" : "", // Hide on mobile when closed
+        "md:translate-x-0 md:block" // Always show on larger screens
+      )}
+    >
+      <div className="p-4 border-b border-sidebar-border">
+        <h1 className="text-xl font-bold">Dashboard</h1>
       </div>
+      <nav className="p-2">
+        {(isAdmin ? adminMenuItems : menuItems).map((item) => (
+          <NavLink
+            key={item.id}
+            to={isAdmin ? `/admin?tab=${item.id}` : `/dashboard/${item.id}`}
+            onClick={() => handleItemClick(item.id)}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center w-full text-left px-3 py-2 rounded-md mb-1 transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-sidebar-accent text-sidebar-foreground"
+              )
+            }
+          >
+            <span className="mr-2">{item.icon}</span>
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 };

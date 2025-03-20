@@ -105,6 +105,79 @@ export type Database = {
         }
         Relationships: []
       }
+      fund_analysis: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          status: string
+          title: string
+          total_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          status?: string
+          title: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          status?: string
+          title?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_analysis_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_analysis_sections: {
+        Row: {
+          amount: number
+          created_at: string | null
+          fund_analysis_id: string
+          id: string
+          section_name: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          fund_analysis_id: string
+          id?: string
+          section_name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          fund_analysis_id?: string
+          id?: string
+          section_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_analysis_sections_fund_analysis_id_fkey"
+            columns: ["fund_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "fund_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -191,7 +264,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

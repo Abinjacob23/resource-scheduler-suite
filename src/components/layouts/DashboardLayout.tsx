@@ -17,6 +17,7 @@ import AdminResourceRequests from '../admin/AdminResourceRequests';
 import AdminEventSchedule from '../admin/AdminEventSchedule';
 import AdminChangePassword from '../admin/AdminChangePassword';
 import AdminCancelEvents from '../admin/AdminCancelEvents';
+import AdminFundRequests from '../admin/AdminFundRequests';
 
 type DashboardLayoutProps = {
   isAdmin?: boolean;
@@ -38,6 +39,8 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
           return <AdminEventRequests />;
         case 'resource-request':
           return <AdminResourceRequests />;
+        case 'fund-request':
+          return <AdminFundRequests />;
         case 'change-password':
           return <AdminChangePassword />;
         case 'cancel-event':

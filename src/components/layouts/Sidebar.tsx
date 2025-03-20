@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   LayoutDashboard,
@@ -8,7 +9,7 @@ import {
   Lock,
   CalendarX
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 type SidebarProps = {
@@ -18,7 +19,7 @@ type SidebarProps = {
 };
 
 const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps) => {
-  const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(true);
 
   const toggleMenu = () => {
@@ -27,6 +28,10 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
 
   const handleItemClick = (itemId: string) => {
     onMenuItemClick(itemId);
+    
+    // Navigate to the proper route
+    navigate(isAdmin ? `/admin?tab=${itemId}` : `/dashboard/${itemId}`);
+    
     // Close the sidebar on mobile after clicking an item
     if (window.innerWidth < 768) {
       setIsMenuOpen(false);
@@ -68,22 +73,19 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
       </div>
       <nav className="p-2">
         {(isAdmin ? adminMenuItems : menuItems).map((item) => (
-          <NavLink
+          <button
             key={item.id}
-            to={isAdmin ? `/admin?tab=${item.id}` : `/dashboard/${item.id}`}
             onClick={() => handleItemClick(item.id)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center w-full text-left px-3 py-2 rounded-md mb-1 transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-sidebar-accent text-sidebar-foreground"
-              )
-            }
+            className={cn(
+              "flex items-center w-full text-left px-3 py-2 rounded-md mb-1 transition-colors",
+              activeItem === item.id
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-sidebar-accent text-sidebar-foreground"
+            )}
           >
             <span className="mr-2">{item.icon}</span>
             <span>{item.label}</span>
-          </NavLink>
+          </button>
         ))}
       </nav>
     </div>

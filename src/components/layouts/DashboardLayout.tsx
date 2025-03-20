@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Dashboard from '../dashboard/Dashboard';
@@ -24,7 +25,14 @@ type DashboardLayoutProps = {
 };
 
 const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
+  const { tab } = useParams<{ tab: string }>();
   const [activeTab, setActiveTab] = useState(isAdmin ? 'admin-dashboard' : 'dashboard');
+
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   const handleMenuItemClick = (itemId: string) => {
     setActiveTab(itemId);

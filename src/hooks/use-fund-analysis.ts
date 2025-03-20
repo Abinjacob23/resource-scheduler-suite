@@ -29,7 +29,13 @@ export const useFundAnalysis = () => {
       
       if (error) throw error;
       
-      setFundAnalyses(data || []);
+      // Ensure status is one of the allowed values in the FundAnalysis type
+      const typedData = (data || []).map(item => ({
+        ...item,
+        status: item.status as FundAnalysis['status']
+      }));
+      
+      setFundAnalyses(typedData);
     } catch (error) {
       console.error('Error fetching fund analyses:', error);
       toast.error('Failed to load fund analyses');

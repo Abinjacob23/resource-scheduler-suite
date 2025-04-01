@@ -3,10 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute, AuthRedirect } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
+import HomePage from "./pages/HomePage";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -23,9 +24,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Route - Landing Page */}
+            <Route path="/home" element={<HomePage />} />
+            
+            {/* Default route redirects to home */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<DashboardLayout />} />
               <Route path="/dashboard/:tab" element={<DashboardLayout />} />
             </Route>

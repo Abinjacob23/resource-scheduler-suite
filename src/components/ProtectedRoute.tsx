@@ -35,7 +35,8 @@ export const AuthRedirect = () => {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    // Redirect authenticated users to dashboard instead of home
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

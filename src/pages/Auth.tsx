@@ -58,7 +58,8 @@ const Auth = () => {
       if (checkIsAdmin(email)) {
         navigate('/admin');
       } else {
-        navigate('/');
+        // Redirect to dashboard instead of home page
+        navigate('/dashboard');
       }
     } catch (error: any) {
       setError(error.message);

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const [isFaculty, setIsFaculty] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [association, setAssociation] = useState('');
 
   const handleRoleChange = (role: 'faculty' | 'admin', checked: boolean) => {
     if (role === 'faculty') {
@@ -25,16 +26,20 @@ const Auth = () => {
       if (checked) {
         setIsAdmin(false);
         setEmail(email.startsWith('admin@') ? 'hod@' + email.substring(6) : 'hod@');
+        setAssociation('Faculty');
       } else if (!isAdmin) {
         setEmail(email.startsWith('hod@') ? email.substring(4) : email);
+        setAssociation('');
       }
     } else {
       setIsAdmin(checked);
       if (checked) {
         setIsFaculty(false);
         setEmail(email.startsWith('hod@') ? 'admin@' + email.substring(4) : 'admin@');
+        setAssociation('Administrator');
       } else if (!isFaculty) {
         setEmail(email.startsWith('admin@') ? email.substring(6) : email);
+        setAssociation('');
       }
     }
   };
@@ -170,6 +175,18 @@ const Auth = () => {
                 </div>
               </div>
             </div>
+            
+            {association && (
+              <div className="space-y-2">
+                <Label>Selected Association</Label>
+                <Input 
+                  type="text" 
+                  value={association} 
+                  readOnly 
+                  className="bg-gray-100 cursor-not-allowed"
+                />
+              </div>
+            )}
             
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Loading...' : 'Sign in'}

@@ -19,6 +19,8 @@ import AdminEventSchedule from '../admin/AdminEventSchedule';
 import AdminChangePassword from '../admin/AdminChangePassword';
 import AdminCancelEvents from '../admin/AdminCancelEvents';
 import AdminFundRequests from '../admin/AdminFundRequests';
+import { useAuth } from '@/contexts/AuthContext';
+import { isAdmin, isFaculty } from '@/utils/admin-utils';
 
 type DashboardLayoutProps = {
   isAdmin?: boolean;
@@ -27,6 +29,32 @@ type DashboardLayoutProps = {
 const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
   const { tab } = useParams<{ tab: string }>();
   const [activeTab, setActiveTab] = useState(isAdmin ? 'admin-dashboard' : 'dashboard');
+  const { user } = useAuth();
+  const [userRole, setUserRole] = useState<'admin' | 'faculty' | 'user'>('user');
+
+  useEffect(() => {
+    // Determine user role
+    if (user) {
+      if (isAdmin(user.email)) {
+        setUserRole('admin');
+      } else if (isFaculty(user.email)) {
+        setUserRole('faculty');
+      } else {
+        setUserRole('user');
+      }
+    } else {
+      const adminSession = localStorage.getItem('adminSession');
+      const facultySession = localStorage.getItem('facultySession');
+      
+      if (adminSession && adminSession.startsWith('admin@')) {
+        setUserRole('admin');
+      } else if (facultySession && facultySession.startsWith('hod@')) {
+        setUserRole('faculty');
+      } else {
+        setUserRole('user');
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     if (tab) {
@@ -40,30 +68,59 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
 
   const renderContent = () => {
     if (isAdmin) {
-      switch (activeTab) {
-        case 'admin-dashboard':
-          return <AdminEventSchedule />;
-        case 'event-request':
-          return <AdminEventRequests />;
-        case 'resource-request':
-          return <AdminResourceRequests />;
-        case 'fund-request':
-          return <AdminFundRequests />;
-        case 'change-password':
-          return <AdminChangePassword />;
-        case 'cancel-event':
-          return <AdminCancelEvents />;
-        default:
-          return <AdminEventSchedule />;
+      // Faculty role (previously admin)
+      if (userRole === 'faculty') {
+        switch (activeTab) {
+          case 'admin-dashboard':
+            return <AdminEventSchedule />;
+          case 'event-request':
+            return <AdminEventRequests />;
+          case 'fund-request':
+            return <AdminFundRequests />;
+          case 'change-password':
+            return <AdminChangePassword />;
+          case 'cancel-event':
+            return <AdminCancelEvents />;
+          default:
+            return <AdminEventSchedule />;
+        }
+      } 
+      // Admin role (new role with expanded capabilities)
+      else if (userRole === 'admin') {
+        switch (activeTab) {
+          case 'admin-dashboard':
+            return <AdminEventSchedule />;
+          case 'event-request':
+            return <AdminEventRequests />;
+          case 'resource-request':
+            return <AdminResourceRequests />;
+          case 'fund-request':
+            return <AdminFundRequests />;
+          case 'change-password':
+            return <AdminChangePassword />;
+          case 'cancel-event':
+            return <AdminCancelEvents />;
+          case 'user-management':
+            return <div className="p-4">
+              <h2 className="text-2xl font-bold mb-4">User Management</h2>
+              <p>Add new users to the system.</p>
+              {/* User management component would go here */}
+            </div>;
+          default:
+            return <AdminEventSchedule />;
+        }
+      } 
+      // Regular user view (shouldn't happen, but as fallback)
+      else {
+        return <Dashboard />;
       }
     } else {
+      // Regular user dashboard
       switch (activeTab) {
         case 'dashboard':
           return <Dashboard />;
         case 'event-request':
           return <EventRequest />;
-        case 'resource-request':
-          return <ResourceRequest />;
         case 'fund-analysis':
           return <FundAnalysis />;
         case 'request-status':
@@ -78,6 +135,7 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
           return <ResourceAvailability />;
         case 'cancel-event':
           return <CancelEvent />;
+        // Removed ResourceRequest from regular user dashboard
         default:
           return <Dashboard />;
       }
@@ -86,7 +144,11 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
 
   return (
     <div className="dashboard-container">
-      <Sidebar activeItem={activeTab} onMenuItemClick={handleMenuItemClick} isAdmin={isAdmin} />
+      <Sidebar 
+        activeItem={activeTab} 
+        onMenuItemClick={handleMenuItemClick} 
+        isAdmin={isAdmin} 
+      />
       <Header />
       <div className="dashboard-content">
         {renderContent()}

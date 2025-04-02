@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Calendar,
@@ -7,10 +7,13 @@ import {
   DollarSign,
   ClipboardList,
   Lock,
-  CalendarX
+  CalendarX,
+  UserPlus
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { isAdmin, isFaculty } from '@/utils/admin-utils';
 
 type SidebarProps = {
   activeItem: string;
@@ -21,6 +24,32 @@ type SidebarProps = {
 const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const { user } = useAuth();
+  const [userRole, setUserRole] = useState<'admin' | 'faculty' | 'user'>('user');
+
+  useEffect(() => {
+    // Determine user role
+    if (user) {
+      if (isAdmin(user.email)) {
+        setUserRole('admin');
+      } else if (isFaculty(user.email)) {
+        setUserRole('faculty');
+      } else {
+        setUserRole('user');
+      }
+    } else {
+      const adminSession = localStorage.getItem('adminSession');
+      const facultySession = localStorage.getItem('facultySession');
+      
+      if (adminSession && adminSession.startsWith('admin@')) {
+        setUserRole('admin');
+      } else if (facultySession && facultySession.startsWith('hod@')) {
+        setUserRole('faculty');
+      } else {
+        setUserRole('user');
+      }
+    }
+  }, [user]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -38,10 +67,10 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
     }
   };
 
-  const menuItems = [
+  // Regular user menu items
+  const userMenuItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Request", icon: <Calendar className="h-5 w-5" /> },
-    { id: "resource-request", label: "Resource Request", icon: <Package className="h-5 w-5" /> },
     { id: "fund-analysis", label: "Fund Analysis", icon: <DollarSign className="h-5 w-5" /> },
     { id: "request-status", label: "Request Status", icon: <ClipboardList className="h-5 w-5" /> },
     { id: "report", label: "Report", icon: <ClipboardList className="h-5 w-5" /> },
@@ -51,14 +80,33 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
+  // Faculty menu items (previously admin)
+  const facultyMenuItems = [
+    { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
+    { id: "fund-request", label: "Fund Requests", icon: <DollarSign className="h-5 w-5" /> },
+    { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
+    { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
+  ];
+
+  // New admin menu items with additional capabilities
   const adminMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
     { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },
     { id: "fund-request", label: "Fund Requests", icon: <DollarSign className="h-5 w-5" /> },
     { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
+    { id: "user-management", label: "User Management", icon: <UserPlus className="h-5 w-5" /> },
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
+
+  // Determine which menu items to show based on role
+  let menuItems = userMenuItems;
+  if (isAdmin) {
+    menuItems = userRole === 'admin' ? adminMenuItems : 
+               userRole === 'faculty' ? facultyMenuItems : 
+               userMenuItems;
+  }
 
   return (
     <div
@@ -69,10 +117,14 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
       )}
     >
       <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-xl font-bold">Dashboard</h1>
+        <h1 className="text-xl font-bold">
+          {userRole === 'admin' ? 'Administrator' : 
+           userRole === 'faculty' ? 'Faculty' : 
+           'Dashboard'}
+        </h1>
       </div>
       <nav className="p-2">
-        {(isAdmin ? adminMenuItems : menuItems).map((item) => (
+        {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleItemClick(item.id)}

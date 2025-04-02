@@ -16,24 +16,29 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkIsAdmin = (email: string) => {
-    // Admin credentials check
-    const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
-    return adminEmails.includes(email);
-  };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      // Special admin bypass - direct login without Supabase auth
-      if ((email === 'admin@example.com' && password === 'admin123') || 
-          (email === 'admin@gmail.com' && password === 'admin123')) {
+      // Faculty bypass (previously admin)
+      if (email.startsWith('hod@') && password === 'admin123') {
         toast({
-          title: "Admin Access Granted",
-          description: "Welcome to the admin dashboard.",
+          title: "Faculty Access Granted",
+          description: "Welcome to the faculty dashboard.",
+        });
+        // Store faculty session in localStorage
+        localStorage.setItem('facultySession', email);
+        navigate('/admin');
+        return;
+      }
+      
+      // Admin bypass
+      if (email.startsWith('admin@') && password === 'admin123') {
+        toast({
+          title: "Administrator Access Granted",
+          description: "Welcome to the administrator dashboard.",
         });
         // Store admin session in localStorage
         localStorage.setItem('adminSession', email);
@@ -54,11 +59,13 @@ const Auth = () => {
         description: "You have successfully logged in.",
       });
       
-      // Check if the user is an admin and redirect accordingly
-      if (checkIsAdmin(email)) {
-        navigate('/admin');
+      // Check if the user is a faculty member or admin and redirect accordingly
+      if (email.startsWith('hod@')) {
+        navigate('/admin'); // Faculty dashboard
+      } else if (email.startsWith('admin@')) {
+        navigate('/admin'); // Admin dashboard
       } else {
-        // Redirect to dashboard instead of home page
+        // Regular users go to dashboard
         navigate('/dashboard');
       }
     } catch (error: any) {

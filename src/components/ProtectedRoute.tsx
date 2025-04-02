@@ -2,6 +2,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { isAdmin, isFaculty } from '@/utils/admin-utils';
 
 export const ProtectedRoute = () => {
   const { user, isLoading } = useAuth();
@@ -15,7 +16,11 @@ export const ProtectedRoute = () => {
     );
   }
 
-  if (!user) {
+  // Check for admin or faculty session in localStorage
+  const adminSession = localStorage.getItem('adminSession');
+  const facultySession = localStorage.getItem('facultySession');
+  
+  if (!user && !adminSession && !facultySession) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -34,9 +39,23 @@ export const AuthRedirect = () => {
     );
   }
 
+  // Check for admin or faculty session in localStorage
+  const adminSession = localStorage.getItem('adminSession');
+  const facultySession = localStorage.getItem('facultySession');
+  
   if (user) {
-    // Redirect authenticated users to dashboard instead of home
-    return <Navigate to="/dashboard" replace />;
+    // Redirect based on user role
+    if (isAdmin(user.email)) {
+      return <Navigate to="/admin" replace />;
+    } else if (isFaculty(user.email)) {
+      return <Navigate to="/faculty" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  } else if (adminSession && adminSession.startsWith('admin@')) {
+    return <Navigate to="/admin" replace />;
+  } else if (facultySession && facultySession.startsWith('hod@')) {
+    return <Navigate to="/faculty" replace />;
   }
 
   return <Outlet />;

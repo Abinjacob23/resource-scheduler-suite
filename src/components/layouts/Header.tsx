@@ -6,23 +6,28 @@ import { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { isFaculty, isAdmin } from '@/utils/admin-utils';
 
 const Header = () => {
   const { user, signOut } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdministrator, setIsAdministrator] = useState(false);
+  const [isFacultyMember, setIsFacultyMember] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
     if (user) {
-      // In a real app, you would check against a roles table
-      // For now, we're using emails to determine admin access
-      // Replace this with your actual admin emails
-      const adminEmails = ['admin@example.com', 'test@example.com', 'admin@gmail.com'];
-      setIsAdmin(adminEmails.includes(user.email || ''));
+      // Check if user is an administrator (starts with admin@)
+      setIsAdministrator(isAdmin(user.email));
+      
+      // Check if user is a faculty member (starts with hod@)
+      setIsFacultyMember(isFaculty(user.email));
     } else {
-      // Check for admin session in localStorage
+      // Check for admin or faculty session in localStorage
       const adminSession = localStorage.getItem('adminSession');
-      setIsAdmin(adminSession === 'admin@example.com' || adminSession === 'admin@gmail.com');
+      const facultySession = localStorage.getItem('facultySession');
+      
+      setIsAdministrator(!!adminSession && adminSession.startsWith('admin@'));
+      setIsFacultyMember(!!facultySession && facultySession.startsWith('hod@'));
     }
   }, [user]);
   
@@ -31,7 +36,17 @@ const Header = () => {
       localStorage.removeItem('adminSession');
       toast({
         title: "Signed out successfully",
-        description: "You have been signed out of your admin account."
+        description: "You have been signed out of your administrator account."
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    if (localStorage.getItem('facultySession')) {
+      localStorage.removeItem('facultySession');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your faculty account."
       });
       navigate('/auth');
       return;
@@ -60,10 +75,12 @@ const Header = () => {
         <h1 className="text-xl font-semibold">Dashboard</h1>
       </div>
       <div className="flex items-center gap-4">
-        {(user || localStorage.getItem('adminSession')) && (
+        {(user || localStorage.getItem('adminSession') || localStorage.getItem('facultySession')) && (
           <>
             <span className="text-sm text-muted-foreground">
-              {user?.email || localStorage.getItem('adminSession')}
+              {user?.email || localStorage.getItem('adminSession') || localStorage.getItem('facultySession')}
+              {isAdministrator && " (Administrator)"}
+              {isFacultyMember && " (Faculty)"}
             </span>
             <Button 
               variant="ghost" 

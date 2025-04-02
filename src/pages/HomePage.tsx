@@ -41,7 +41,7 @@ const HomePage = () => {
         const { data, error } = await supabase
           .from('events')
           .select('*')
-          .eq('status', 'approved')
+          .eq('status', 'approved') // Explicitly filter for approved events
           .order('date', { ascending: true })
           .limit(5);
           

@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 // Import the images
 const logoImage = '/lovable-uploads/66be6198-c1bc-4653-bc07-c3e8608e6d17.png';
@@ -10,9 +12,20 @@ const eventImage1 = '/lovable-uploads/095981ce-3e03-4d79-859c-4aace39640f6.png';
 const eventImage2 = '/lovable-uploads/e6bbec0f-8c8b-4443-b1db-b228c7da1c86.png';
 const eventImage3 = '/lovable-uploads/37f738d5-87cc-401f-b0af-092d14b33aef.png';
 
+// Define the event type
+type Event = {
+  id: string;
+  event_name: string;
+  association: string;
+  date: string;
+  status: string;
+};
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('home');
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Refs for each section
   const homeRef = useRef<HTMLDivElement>(null);
@@ -20,8 +33,44 @@ const HomePage = () => {
   const resourcesRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
+  // Fetch events from database
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('status', 'approved')
+          .order('date', { ascending: true })
+          .limit(5);
+          
+        if (error) {
+          console.error('Error fetching events:', error);
+          return;
+        }
+        
+        setEvents(data || []);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEvents();
+  }, []);
+
   const handleLogin = () => {
     navigate('/auth');
+  };
+
+  // Function to format the date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    return { day, month };
   };
 
   // Function to scroll to a section
@@ -138,31 +187,34 @@ const HomePage = () => {
               <div className="flex flex-col justify-center">
                 <h3 className="text-2xl font-semibold mb-6">Our Events</h3>
                 
-                <div className="mb-8">
-                  <div className="flex items-start">
-                    <div className="bg-white rounded-lg shadow p-4 mr-4 text-center">
-                      <span className="text-3xl font-bold block">22</span>
-                      <span>Feb</span>
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-semibold">EDGE+ 4.0</h4>
-                      <span className="bg-black text-white text-sm px-2 py-1 rounded">CCF LAB</span>
-                    </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#e84c15]" />
+                    <span className="ml-2">Loading events...</span>
                   </div>
-                </div>
-                
-                <div>
-                  <div className="flex items-start">
-                    <div className="bg-white rounded-lg shadow p-4 mr-4 text-center">
-                      <span className="text-3xl font-bold block">27</span>
-                      <span>Mar</span>
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-semibold">ARISE</h4>
-                      <span className="bg-black text-white text-sm px-2 py-1 rounded">AUDITORIUM</span>
-                    </div>
+                ) : events.length > 0 ? (
+                  <div className="space-y-8">
+                    {events.map((event) => {
+                      const formattedDate = formatDate(event.date);
+                      return (
+                        <div key={event.id} className="flex items-start">
+                          <div className="bg-white rounded-lg shadow p-4 mr-4 text-center">
+                            <span className="text-3xl font-bold block">{formattedDate.day}</span>
+                            <span>{formattedDate.month}</span>
+                          </div>
+                          <div>
+                            <h4 className="text-xl font-semibold">{event.event_name}</h4>
+                            <span className="bg-black text-white text-sm px-2 py-1 rounded">{event.association}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p>No upcoming events found.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

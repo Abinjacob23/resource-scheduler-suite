@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,6 +16,28 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFaculty, setIsFaculty] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const handleRoleChange = (role: 'faculty' | 'admin', checked: boolean) => {
+    if (role === 'faculty') {
+      setIsFaculty(checked);
+      if (checked) {
+        setIsAdmin(false);
+        setEmail(email.startsWith('admin@') ? 'hod@' + email.substring(6) : 'hod@');
+      } else if (!isAdmin) {
+        setEmail(email.startsWith('hod@') ? email.substring(4) : email);
+      }
+    } else {
+      setIsAdmin(checked);
+      if (checked) {
+        setIsFaculty(false);
+        setEmail(email.startsWith('hod@') ? 'admin@' + email.substring(4) : 'admin@');
+      } else if (!isFaculty) {
+        setEmail(email.startsWith('admin@') ? email.substring(6) : email);
+      }
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +45,7 @@ const Auth = () => {
     setError(null);
 
     try {
-      // Faculty bypass (previously admin)
+      // Faculty bypass 
       if (email.startsWith('hod@') && password === 'admin123') {
         toast({
           title: "Faculty Access Granted",
@@ -30,7 +53,7 @@ const Auth = () => {
         });
         // Store faculty session in localStorage
         localStorage.setItem('facultySession', email);
-        navigate('/admin');
+        navigate('/faculty');
         return;
       }
       
@@ -61,7 +84,7 @@ const Auth = () => {
       
       // Check if the user is a faculty member or admin and redirect accordingly
       if (email.startsWith('hod@')) {
-        navigate('/admin'); // Faculty dashboard
+        navigate('/faculty'); // Faculty dashboard
       } else if (email.startsWith('admin@')) {
         navigate('/admin'); // Admin dashboard
       } else {
@@ -115,6 +138,39 @@ const Auth = () => {
                 required 
               />
             </div>
+            
+            <div className="space-y-3">
+              <Label className="text-base">Select your role</Label>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="faculty" 
+                    checked={isFaculty}
+                    onCheckedChange={(checked) => handleRoleChange('faculty', checked === true)}
+                  />
+                  <Label 
+                    htmlFor="faculty" 
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Faculty (login starts with "hod@")
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="admin" 
+                    checked={isAdmin}
+                    onCheckedChange={(checked) => handleRoleChange('admin', checked === true)}
+                  />
+                  <Label 
+                    htmlFor="admin" 
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Administrator (login starts with "admin@")
+                  </Label>
+                </div>
+              </div>
+            </div>
+            
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Loading...' : 'Sign in'}
             </Button>

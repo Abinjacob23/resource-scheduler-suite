@@ -20,15 +20,15 @@ import AdminChangePassword from '../admin/AdminChangePassword';
 import AdminCancelEvents from '../admin/AdminCancelEvents';
 import AdminFundRequests from '../admin/AdminFundRequests';
 import { useAuth } from '@/contexts/AuthContext';
-import { isAdmin, isFaculty } from '@/utils/admin-utils';
+import { isAdmin, isFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
 
 type DashboardLayoutProps = {
   isAdmin?: boolean;
 };
 
-const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
+const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps) => {
   const { tab } = useParams<{ tab: string }>();
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'admin-dashboard' : 'dashboard');
+  const [activeTab, setActiveTab] = useState(isAdminView ? 'admin-dashboard' : 'dashboard');
   const { user } = useAuth();
   const [userRole, setUserRole] = useState<'admin' | 'faculty' | 'user'>('user');
 
@@ -43,12 +43,10 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
         setUserRole('user');
       }
     } else {
-      const adminSession = localStorage.getItem('adminSession');
-      const facultySession = localStorage.getItem('facultySession');
-      
-      if (adminSession && adminSession.startsWith('admin@')) {
+      // Check localStorage for session
+      if (checkLocalAdmin()) {
         setUserRole('admin');
-      } else if (facultySession && facultySession.startsWith('hod@')) {
+      } else if (checkLocalFaculty()) {
         setUserRole('faculty');
       } else {
         setUserRole('user');
@@ -67,7 +65,7 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
   };
 
   const renderContent = () => {
-    if (isAdmin) {
+    if (isAdminView) {
       // Faculty role (previously admin)
       if (userRole === 'faculty') {
         switch (activeTab) {
@@ -147,7 +145,7 @@ const DashboardLayout = ({ isAdmin = false }: DashboardLayoutProps) => {
       <Sidebar 
         activeItem={activeTab} 
         onMenuItemClick={handleMenuItemClick} 
-        isAdmin={isAdmin} 
+        isAdmin={isAdminView} 
       />
       <Header />
       <div className="dashboard-content">

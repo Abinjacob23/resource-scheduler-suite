@@ -13,7 +13,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { isAdmin, isFaculty } from '@/utils/admin-utils';
+import { isAdmin, isFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
 
 type SidebarProps = {
   activeItem: string;
@@ -21,7 +21,7 @@ type SidebarProps = {
   isAdmin?: boolean;
 };
 
-const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps) => {
+const Sidebar = ({ activeItem, onMenuItemClick, isAdmin: isAdminView = false }: SidebarProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const { user } = useAuth();
@@ -38,12 +38,10 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
         setUserRole('user');
       }
     } else {
-      const adminSession = localStorage.getItem('adminSession');
-      const facultySession = localStorage.getItem('facultySession');
-      
-      if (adminSession && adminSession.startsWith('admin@')) {
+      // Check localStorage for session
+      if (checkLocalAdmin()) {
         setUserRole('admin');
-      } else if (facultySession && facultySession.startsWith('hod@')) {
+      } else if (checkLocalFaculty()) {
         setUserRole('faculty');
       } else {
         setUserRole('user');
@@ -59,7 +57,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
     onMenuItemClick(itemId);
     
     // Navigate to the proper route
-    navigate(isAdmin ? `/admin?tab=${itemId}` : `/dashboard/${itemId}`);
+    navigate(isAdminView ? `/admin?tab=${itemId}` : `/dashboard/${itemId}`);
     
     // Close the sidebar on mobile after clicking an item
     if (window.innerWidth < 768) {
@@ -102,7 +100,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin = false }: SidebarProps)
 
   // Determine which menu items to show based on role
   let menuItems = userMenuItems;
-  if (isAdmin) {
+  if (isAdminView) {
     menuItems = userRole === 'admin' ? adminMenuItems : 
                userRole === 'faculty' ? facultyMenuItems : 
                userMenuItems;

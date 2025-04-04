@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -95,8 +96,14 @@ const Auth = () => {
         description: "You have successfully logged in.",
       });
       
-      // Regular users go to dashboard
-      navigate('/dashboard');
+      // Redirect based on user email/type
+      if (email.startsWith('admin@')) {
+        navigate('/admin');
+      } else if (email.startsWith('hod@')) {
+        navigate('/faculty');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {

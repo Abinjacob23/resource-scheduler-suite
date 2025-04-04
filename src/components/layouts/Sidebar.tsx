@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -18,9 +19,10 @@ type SidebarProps = {
   activeItem: string;
   onMenuItemClick: (itemId: string) => void;
   isAdminView?: boolean;
+  isFacultyView?: boolean;
 };
 
-const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarProps) => {
+const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false, isFacultyView = false }: SidebarProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const { user } = useAuth();
@@ -56,7 +58,13 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarPr
     onMenuItemClick(itemId);
     
     // Navigate to the proper route
-    navigate(isAdminView ? `/admin?tab=${itemId}` : `/dashboard/${itemId}`);
+    if (isAdminView) {
+      navigate(`/admin?tab=${itemId}`);
+    } else if (isFacultyView) {
+      navigate(`/faculty?tab=${itemId}`);
+    } else {
+      navigate(`/dashboard/${itemId}`);
+    }
     
     // Close the sidebar on mobile after clicking an item
     if (window.innerWidth < 768) {
@@ -77,9 +85,9 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarPr
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Faculty menu items - removed resource-request option
+  // Faculty menu items - only event requests, fund requests, cancel events and change password
   const facultyMenuItems = [
-    { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: "faculty-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
     { id: "fund-request", label: "Fund Requests", icon: <DollarSign className="h-5 w-5" /> },
     { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
@@ -95,12 +103,12 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarPr
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Determine which menu items to show based on role
+  // Determine which menu items to show based on role and view type
   let menuItems = userMenuItems;
   if (isAdminView) {
-    menuItems = userRole === 'admin' ? adminMenuItems : 
-               userRole === 'faculty' ? facultyMenuItems : 
-               userMenuItems;
+    menuItems = userRole === 'admin' ? adminMenuItems : userMenuItems;
+  } else if (isFacultyView) {
+    menuItems = userRole === 'faculty' ? facultyMenuItems : userMenuItems;
   }
 
   return (

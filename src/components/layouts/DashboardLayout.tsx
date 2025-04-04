@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -24,11 +23,16 @@ import { isAdmin as checkIsAdmin, isFaculty as checkIsFaculty, checkLocalAdmin, 
 
 type DashboardLayoutProps = {
   isAdminView?: boolean;
+  isFacultyView?: boolean;
 };
 
-const DashboardLayout = ({ isAdminView = false }: DashboardLayoutProps) => {
+const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: DashboardLayoutProps) => {
   const { tab } = useParams<{ tab: string }>();
-  const [activeTab, setActiveTab] = useState(isAdminView ? 'admin-dashboard' : 'dashboard');
+  const [activeTab, setActiveTab] = useState(
+    isAdminView ? 'admin-dashboard' : 
+    isFacultyView ? 'faculty-dashboard' : 
+    'dashboard'
+  );
   const { user } = useAuth();
   const [userRole, setUserRole] = useState<'admin' | 'faculty' | 'user'>('user');
 
@@ -65,26 +69,10 @@ const DashboardLayout = ({ isAdminView = false }: DashboardLayoutProps) => {
   };
 
   const renderContent = () => {
+    // Admin view
     if (isAdminView) {
-      // Faculty role
-      if (userRole === 'faculty') {
-        switch (activeTab) {
-          case 'admin-dashboard':
-            return <AdminEventSchedule />;
-          case 'event-request':
-            return <AdminEventRequests />;
-          case 'fund-request':
-            return <AdminFundRequests />;
-          case 'change-password':
-            return <AdminChangePassword />;
-          case 'cancel-event':
-            return <AdminCancelEvents />;
-          default:
-            return <AdminEventSchedule />;
-        }
-      } 
       // Admin role - simplified options
-      else if (userRole === 'admin') {
+      if (userRole === 'admin') {
         switch (activeTab) {
           case 'admin-dashboard':
             return <AdminEventSchedule />;
@@ -104,12 +92,30 @@ const DashboardLayout = ({ isAdminView = false }: DashboardLayoutProps) => {
             return <AdminEventSchedule />;
         }
       } 
-      // Regular user view (shouldn't happen, but as fallback)
+      // Other roles (shouldn't happen, but as fallback)
       else {
         return <Dashboard />;
       }
-    } else {
-      // Regular user dashboard
+    }
+    // Faculty view
+    else if (isFacultyView) {
+      switch (activeTab) {
+        case 'faculty-dashboard':
+          return <AdminEventSchedule />;
+        case 'event-request':
+          return <AdminEventRequests />;
+        case 'fund-request':
+          return <AdminFundRequests />;
+        case 'change-password':
+          return <AdminChangePassword />;
+        case 'cancel-event':
+          return <AdminCancelEvents />;
+        default:
+          return <AdminEventSchedule />;
+      }
+    }
+    // Regular user dashboard
+    else {
       switch (activeTab) {
         case 'dashboard':
           return <Dashboard />;
@@ -140,7 +146,8 @@ const DashboardLayout = ({ isAdminView = false }: DashboardLayoutProps) => {
       <Sidebar 
         activeItem={activeTab} 
         onMenuItemClick={handleMenuItemClick} 
-        isAdminView={isAdminView} 
+        isAdminView={isAdminView}
+        isFacultyView={isFacultyView}
       />
       <Header />
       <div className="dashboard-content">

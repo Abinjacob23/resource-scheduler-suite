@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/layouts/DashboardLayout";
 
@@ -43,7 +44,7 @@ const App = () => (
             
             {/* Faculty Routes */}
             <Route element={<FacultyRoute />}>
-              <Route path="/faculty" element={<Admin />} />
+              <Route path="/faculty" element={<Faculty />} />
             </Route>
             
             {/* Auth Routes */}

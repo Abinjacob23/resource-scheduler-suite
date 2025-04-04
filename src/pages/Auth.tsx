@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,32 +16,44 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isFaculty, setIsFaculty] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [association, setAssociation] = useState('');
+  const [userType, setUserType] = useState<'association' | 'faculty' | 'admin'>('association');
 
-  const handleRoleChange = (role: 'faculty' | 'admin', checked: boolean) => {
-    if (role === 'faculty') {
-      setIsFaculty(checked);
-      if (checked) {
-        setIsAdmin(false);
-        setEmail(email.startsWith('admin@') ? 'hod@' + email.substring(6) : 'hod@');
-        setAssociation('Faculty');
-      } else if (!isAdmin) {
-        setEmail(email.startsWith('hod@') ? email.substring(4) : email);
-        setAssociation('');
-      }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    
+    // Auto-detect user type from email
+    if (newEmail.startsWith('hod@')) {
+      setUserType('faculty');
+    } else if (newEmail.startsWith('admin@')) {
+      setUserType('admin');
     } else {
-      setIsAdmin(checked);
-      if (checked) {
-        setIsFaculty(false);
-        setEmail(email.startsWith('hod@') ? 'admin@' + email.substring(4) : 'admin@');
-        setAssociation('Administrator');
-      } else if (!isFaculty) {
-        setEmail(email.startsWith('admin@') ? email.substring(6) : email);
-        setAssociation('');
-      }
+      setUserType('association');
     }
+  };
+
+  const handleUserTypeChange = (value: string) => {
+    const newType = value as 'association' | 'faculty' | 'admin';
+    setUserType(newType);
+    
+    // Update email prefix based on user type
+    let newEmail = email;
+    
+    // First, remove any existing prefixes
+    if (email.startsWith('hod@')) {
+      newEmail = email.substring(4);
+    } else if (email.startsWith('admin@')) {
+      newEmail = email.substring(6);
+    }
+    
+    // Then add the appropriate prefix
+    if (newType === 'faculty') {
+      newEmail = 'hod@' + newEmail;
+    } else if (newType === 'admin') {
+      newEmail = 'admin@' + newEmail;
+    }
+    
+    setEmail(newEmail);
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -50,31 +62,28 @@ const Auth = () => {
     setError(null);
 
     try {
-      // Faculty bypass 
-      if (email.startsWith('hod@') && password === 'admin123') {
+      // Check for the special login cases
+      if (userType === 'faculty' && password === 'admin123') {
         toast({
           title: "Faculty Access Granted",
           description: "Welcome to the faculty dashboard.",
         });
-        // Store faculty session in localStorage
         localStorage.setItem('facultySession', email);
         navigate('/faculty');
         return;
       }
       
-      // Admin bypass
-      if (email.startsWith('admin@') && password === 'admin123') {
+      if (userType === 'admin' && password === 'admin123') {
         toast({
           title: "Administrator Access Granted",
           description: "Welcome to the administrator dashboard.",
         });
-        // Store admin session in localStorage
         localStorage.setItem('adminSession', email);
         navigate('/admin');
         return;
       }
 
-      // Regular Supabase auth for non-admin users
+      // Regular Supabase auth for association users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -87,15 +96,8 @@ const Auth = () => {
         description: "You have successfully logged in.",
       });
       
-      // Check if the user is a faculty member or admin and redirect accordingly
-      if (email.startsWith('hod@')) {
-        navigate('/faculty'); // Faculty dashboard
-      } else if (email.startsWith('admin@')) {
-        navigate('/admin'); // Admin dashboard
-      } else {
-        // Regular users go to dashboard
-        navigate('/dashboard');
-      }
+      // Regular users go to dashboard
+      navigate('/dashboard');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -104,18 +106,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <div className="w-full max-w-md text-center mb-6">
+        <h1 className="text-3xl font-bold text-primary">Event Hub</h1>
+        <p className="text-muted-foreground">The complete platform for event management</p>
+      </div>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Welcome back
+            Event Hub
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to sign in to your account
+            The complete platform for event management
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-6">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -126,9 +133,9 @@ const Auth = () => {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="name@example.com" 
+                placeholder="Enter your email" 
                 value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={handleEmailChange} 
                 required 
               />
             </div>
@@ -137,7 +144,7 @@ const Auth = () => {
               <Input 
                 id="password" 
                 type="password" 
-                placeholder="••••••••" 
+                placeholder="Enter your password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
@@ -145,54 +152,53 @@ const Auth = () => {
             </div>
             
             <div className="space-y-3">
-              <Label className="text-base">Select your role</Label>
-              <div className="flex flex-col space-y-2">
+              <Label>Login as</Label>
+              <RadioGroup 
+                value={userType} 
+                onValueChange={handleUserTypeChange}
+                className="flex flex-col space-y-2"
+              >
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="faculty" 
-                    checked={isFaculty}
-                    onCheckedChange={(checked) => handleRoleChange('faculty', checked === true)}
-                  />
-                  <Label 
-                    htmlFor="faculty" 
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Faculty (login starts with "hod@")
-                  </Label>
+                  <RadioGroupItem value="association" id="association" />
+                  <Label htmlFor="association" className="cursor-pointer">Association</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="admin" 
-                    checked={isAdmin}
-                    onCheckedChange={(checked) => handleRoleChange('admin', checked === true)}
-                  />
-                  <Label 
-                    htmlFor="admin" 
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Administrator (login starts with "admin@")
-                  </Label>
+                  <RadioGroupItem value="faculty" id="faculty" />
+                  <Label htmlFor="faculty" className="cursor-pointer">Faculty</Label>
                 </div>
-              </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="admin" id="admin" />
+                  <Label htmlFor="admin" className="cursor-pointer">Administrator</Label>
+                </div>
+              </RadioGroup>
             </div>
             
-            {association && (
-              <div className="space-y-2">
-                <Label>Selected Association</Label>
-                <Input 
-                  type="text" 
-                  value={association} 
-                  readOnly 
-                  className="bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-            )}
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Loading...' : 'Sign in'}
+            <Button type="submit" className="w-full bg-primary" disabled={isLoading}>
+              {isLoading ? 'Loading...' : 'Login'}
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col items-center justify-center p-6">
+          <div className="w-full text-center">
+            <a 
+              href="#" 
+              className="text-primary hover:underline text-sm"
+              onClick={(e) => {
+                e.preventDefault();
+                // Implement sign up functionality here
+                toast({
+                  title: "Sign up",
+                  description: "Sign up functionality coming soon!",
+                });
+              }}
+            >
+              Please sign up
+            </a>
+          </div>
+          <div className="mt-6 text-center text-muted-foreground text-sm">
+            Event Hub - The complete solution for campus events
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -78,7 +77,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarPr
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Faculty menu items
+  // Faculty menu items - removed resource-request option
   const facultyMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
@@ -87,7 +86,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarPr
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // New admin menu items - simplified with only the requested options
+  // Admin menu items - simplified with only the requested options
   const adminMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },

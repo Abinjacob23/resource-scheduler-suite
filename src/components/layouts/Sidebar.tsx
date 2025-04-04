@@ -13,15 +13,15 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { isAdmin, isFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
+import { isAdmin as checkIsAdmin, isFaculty as checkIsFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
 
 type SidebarProps = {
   activeItem: string;
   onMenuItemClick: (itemId: string) => void;
-  isAdmin?: boolean;
+  isAdminView?: boolean;
 };
 
-const Sidebar = ({ activeItem, onMenuItemClick, isAdmin: isAdminView = false }: SidebarProps) => {
+const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false }: SidebarProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const { user } = useAuth();
@@ -30,9 +30,9 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin: isAdminView = false }: 
   useEffect(() => {
     // Determine user role
     if (user) {
-      if (isAdmin(user.email)) {
+      if (checkIsAdmin(user.email)) {
         setUserRole('admin');
-      } else if (isFaculty(user.email)) {
+      } else if (checkIsFaculty(user.email)) {
         setUserRole('faculty');
       } else {
         setUserRole('user');
@@ -78,7 +78,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin: isAdminView = false }: 
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Faculty menu items (previously admin)
+  // Faculty menu items
   const facultyMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
@@ -87,14 +87,12 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdmin: isAdminView = false }: 
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // New admin menu items with additional capabilities
+  // New admin menu items - simplified with only the requested options
   const adminMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { id: "event-request", label: "Event Requests", icon: <Calendar className="h-5 w-5" /> },
     { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },
-    { id: "fund-request", label: "Fund Requests", icon: <DollarSign className="h-5 w-5" /> },
-    { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
     { id: "user-management", label: "User Management", icon: <UserPlus className="h-5 w-5" /> },
+    { id: "cancel-event", label: "Cancel Events", icon: <CalendarX className="h-5 w-5" /> },
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 

@@ -20,13 +20,13 @@ import AdminChangePassword from '../admin/AdminChangePassword';
 import AdminCancelEvents from '../admin/AdminCancelEvents';
 import AdminFundRequests from '../admin/AdminFundRequests';
 import { useAuth } from '@/contexts/AuthContext';
-import { isAdmin, isFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
+import { isAdmin as checkIsAdmin, isFaculty as checkIsFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
 
 type DashboardLayoutProps = {
-  isAdmin?: boolean;
+  isAdminView?: boolean;
 };
 
-const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps) => {
+const DashboardLayout = ({ isAdminView = false }: DashboardLayoutProps) => {
   const { tab } = useParams<{ tab: string }>();
   const [activeTab, setActiveTab] = useState(isAdminView ? 'admin-dashboard' : 'dashboard');
   const { user } = useAuth();
@@ -35,9 +35,9 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
   useEffect(() => {
     // Determine user role
     if (user) {
-      if (isAdmin(user.email)) {
+      if (checkIsAdmin(user.email)) {
         setUserRole('admin');
-      } else if (isFaculty(user.email)) {
+      } else if (checkIsFaculty(user.email)) {
         setUserRole('faculty');
       } else {
         setUserRole('user');
@@ -66,7 +66,7 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
 
   const renderContent = () => {
     if (isAdminView) {
-      // Faculty role (previously admin)
+      // Faculty role
       if (userRole === 'faculty') {
         switch (activeTab) {
           case 'admin-dashboard':
@@ -83,17 +83,13 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
             return <AdminEventSchedule />;
         }
       } 
-      // Admin role (new role with expanded capabilities)
+      // Admin role - simplified options
       else if (userRole === 'admin') {
         switch (activeTab) {
           case 'admin-dashboard':
             return <AdminEventSchedule />;
-          case 'event-request':
-            return <AdminEventRequests />;
           case 'resource-request':
             return <AdminResourceRequests />;
-          case 'fund-request':
-            return <AdminFundRequests />;
           case 'change-password':
             return <AdminChangePassword />;
           case 'cancel-event':
@@ -101,7 +97,7 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
           case 'user-management':
             return <div className="p-4">
               <h2 className="text-2xl font-bold mb-4">User Management</h2>
-              <p>Add new users to the system.</p>
+              <p>Add and manage users in the system.</p>
               {/* User management component would go here */}
             </div>;
           default:
@@ -133,7 +129,6 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
           return <ResourceAvailability />;
         case 'cancel-event':
           return <CancelEvent />;
-        // Removed ResourceRequest from regular user dashboard
         default:
           return <Dashboard />;
       }
@@ -145,7 +140,7 @@ const DashboardLayout = ({ isAdmin: isAdminView = false }: DashboardLayoutProps)
       <Sidebar 
         activeItem={activeTab} 
         onMenuItemClick={handleMenuItemClick} 
-        isAdmin={isAdminView} 
+        isAdminView={isAdminView} 
       />
       <Header />
       <div className="dashboard-content">

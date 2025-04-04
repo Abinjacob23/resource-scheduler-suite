@@ -65,7 +65,7 @@ const Admin = () => {
   if (isCheckingAdmin) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
         <span className="ml-2 text-lg">Verifying admin access...</span>
       </div>
     );
@@ -78,7 +78,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardLayout isAdmin={true} />
+      <DashboardLayout isAdminView={true} />
     </div>
   );
 };

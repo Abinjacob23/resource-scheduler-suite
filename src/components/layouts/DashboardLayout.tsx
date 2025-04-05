@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -121,6 +122,8 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
           return <Dashboard />;
         case 'event-request':
           return <EventRequest />;
+        case 'resource-request':
+          return <ResourceRequest />;
         case 'fund-analysis':
           return <FundAnalysis />;
         case 'request-status':

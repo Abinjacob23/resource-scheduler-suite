@@ -76,6 +76,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false, isFacultyVi
   const userMenuItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "event-request", label: "Event Request", icon: <Calendar className="h-5 w-5" /> },
+    { id: "resource-request", label: "Resource Request", icon: <Package className="h-5 w-5" /> },
     { id: "fund-analysis", label: "Fund Analysis", icon: <DollarSign className="h-5 w-5" /> },
     { id: "request-status", label: "Request Status", icon: <ClipboardList className="h-5 w-5" /> },
     { id: "report", label: "Report", icon: <ClipboardList className="h-5 w-5" /> },

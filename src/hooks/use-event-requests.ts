@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { hasAdminAccess } from '@/utils/admin-utils';
+import { hasAdminAccess, hasFacultyAccess } from '@/utils/admin-utils';
 import { EventRequest } from '@/types/admin';
 
 /**
@@ -20,18 +20,18 @@ export const useEventRequests = () => {
   // Function to fetch event requests
   const fetchEventRequests = async () => {
     try {
-      console.log('Admin: Attempting to fetch event requests...');
+      console.log('Admin/Faculty: Attempting to fetch event requests...');
       setLoading(true);
       
-      // First check if user is admin
-      if (!hasAdminAccess(user)) {
-        console.error('Non-admin user attempted to access event requests');
+      // First check if user is admin or faculty
+      if (!hasAdminAccess(user) && !hasFacultyAccess(user)) {
+        console.error('Unauthorized user attempted to access event requests');
         toast.error('You do not have permission to view event requests');
         setLoading(false);
         return;
       }
       
-      console.log('Admin: User is admin, fetching event requests...');
+      console.log('User has permission, fetching event requests...');
       const { data, error } = await supabase
         .from('events')
         .select('*')
@@ -42,7 +42,7 @@ export const useEventRequests = () => {
         throw error;
       }
       
-      console.log('Admin: Received event requests:', data);
+      console.log('Received event requests:', data);
       setRequests(data || []);
     } catch (error) {
       console.error('Error fetching event requests:', error);
@@ -97,13 +97,13 @@ export const useEventRequests = () => {
           table: 'events'
         },
         (payload) => {
-          console.log('Admin: Real-time event update received:', payload);
+          console.log('Real-time event update received:', payload);
           // Refresh the entire list to ensure consistent state
           fetchEventRequests();
         }
       )
       .subscribe((status) => {
-        console.log('Admin event subscription status:', status);
+        console.log('Event subscription status:', status);
       });
 
     // Cleanup on unmount

@@ -94,7 +94,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false, isFacultyVi
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Admin menu items - ensure resource requests and user management are included
+  // Admin menu items - remove fund requests and only keep resource requests and user management
   const adminMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },

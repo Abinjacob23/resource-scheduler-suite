@@ -10,7 +10,7 @@ export type SidebarNavItem = {
   title: string;
   disabled?: boolean;
   external?: boolean;
-  icon?: keyof typeof Icons;
+  icon?: string;
 } & (
   | {
       href: string;
@@ -40,7 +40,17 @@ import {
   UserPlus
 } from 'lucide-react';
 
-import { Icons } from "@/components/icons"
+// Define Icons object to match the type expected in SidebarNavItem
+export const Icons = {
+  layoutDashboard: LayoutDashboard,
+  calendar: Calendar,
+  package: Package,
+  dollarSign: DollarSign,
+  clipboardList: ClipboardList,
+  lock: Lock,
+  calendarX: CalendarX,
+  userPlus: UserPlus
+};
 
 export const dashboardNavItems: NavItem[] = [
   {

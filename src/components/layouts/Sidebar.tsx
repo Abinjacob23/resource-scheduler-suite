@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -95,7 +94,7 @@ const Sidebar = ({ activeItem, onMenuItemClick, isAdminView = false, isFacultyVi
     { id: "change-password", label: "Change Password", icon: <Lock className="h-5 w-5" /> },
   ];
 
-  // Admin menu items - simplified with only the requested options
+  // Admin menu items - ensure resource requests and user management are included
   const adminMenuItems = [
     { id: "admin-dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: "resource-request", label: "Resource Requests", icon: <Package className="h-5 w-5" /> },

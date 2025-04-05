@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -38,7 +37,6 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
   const [userRole, setUserRole] = useState<'admin' | 'faculty' | 'user'>('user');
 
   useEffect(() => {
-    // Determine user role
     if (user) {
       if (checkIsAdmin(user.email)) {
         setUserRole('admin');
@@ -48,7 +46,6 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
         setUserRole('user');
       }
     } else {
-      // Check localStorage for session
       if (checkLocalAdmin()) {
         setUserRole('admin');
       } else if (checkLocalFaculty()) {
@@ -70,9 +67,7 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
   };
 
   const renderContent = () => {
-    // Admin view
     if (isAdminView) {
-      // Admin role - simplified options
       if (userRole === 'admin') {
         switch (activeTab) {
           case 'admin-dashboard':
@@ -84,22 +79,19 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
           case 'cancel-event':
             return <AdminCancelEvents />;
           case 'user-management':
-            return <div className="p-4">
-              <h2 className="text-2xl font-bold mb-4">User Management</h2>
-              <p>Add and manage users in the system.</p>
-              {/* User management component would go here */}
-            </div>;
+            const UserManagement = React.lazy(() => import('../admin/UserManagement'));
+            return (
+              <React.Suspense fallback={<div className="p-4">Loading user management...</div>}>
+                <UserManagement />
+              </React.Suspense>
+            );
           default:
             return <AdminEventSchedule />;
         }
-      } 
-      // Other roles (shouldn't happen, but as fallback)
-      else {
+      } else {
         return <Dashboard />;
       }
-    }
-    // Faculty view
-    else if (isFacultyView) {
+    } else if (isFacultyView) {
       switch (activeTab) {
         case 'faculty-dashboard':
           return <AdminEventSchedule />;
@@ -114,9 +106,7 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
         default:
           return <AdminEventSchedule />;
       }
-    }
-    // Regular user dashboard
-    else {
+    } else {
       switch (activeTab) {
         case 'dashboard':
           return <Dashboard />;

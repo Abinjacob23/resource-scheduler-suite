@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -20,6 +21,9 @@ import AdminCancelEvents from '../admin/AdminCancelEvents';
 import AdminFundRequests from '../admin/AdminFundRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { isAdmin as checkIsAdmin, isFaculty as checkIsFaculty, checkLocalAdmin, checkLocalFaculty } from '@/utils/admin-utils';
+
+// Lazy load UserManagement component
+const UserManagement = lazy(() => import('../admin/UserManagement'));
 
 type DashboardLayoutProps = {
   isAdminView?: boolean;
@@ -79,11 +83,10 @@ const DashboardLayout = ({ isAdminView = false, isFacultyView = false }: Dashboa
           case 'cancel-event':
             return <AdminCancelEvents />;
           case 'user-management':
-            const UserManagement = React.lazy(() => import('../admin/UserManagement'));
             return (
-              <React.Suspense fallback={<div className="p-4">Loading user management...</div>}>
+              <Suspense fallback={<div className="p-4">Loading user management...</div>}>
                 <UserManagement />
-              </React.Suspense>
+              </Suspense>
             );
           default:
             return <AdminEventSchedule />;

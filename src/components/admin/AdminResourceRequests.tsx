@@ -61,6 +61,7 @@ const AdminResourceRequests = () => {
     try {
       console.log('Admin: Fetching resource requests...');
       setLoading(true);
+      // Make sure we're not using .single() which would throw an error if no results
       const { data, error } = await supabase
         .from('resource_requests')
         .select('*')
@@ -129,15 +130,15 @@ const AdminResourceRequests = () => {
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Resource Requests</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-6">Resource Requests</h2>
       
       {requests.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          No resource requests found
+        <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border">
+          No resource requests found. When users submit resource requests, they will appear here for approval.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-md border shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -151,7 +152,7 @@ const AdminResourceRequests = () => {
             <TableBody>
               {requests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell>{request.event_name}</TableCell>
+                  <TableCell className="font-medium">{request.event_name}</TableCell>
                   <TableCell>{new Date(request.date).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
